@@ -15,6 +15,7 @@ export default function AIChat() {
     const [step, setStep] = useState(0);
     const [showOptions, setShowOptions] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
+    const [selectedOptions, setSelectedOptions] = useState([]);
     const endRef = useRef(null);
 
     // Ref to track if the initial question has been triggered
@@ -44,10 +45,24 @@ export default function AIChat() {
             setIsTyping(false);
             setMessages((m) => [...m, { type: 'bot', text: CLIENT_QUESTIONS[i].text }]);
             setShowOptions(true);
+            setSelectedOptions([]); // Reset selections for new question
         }, 1500);
     };
 
-    const handleAnswer = (answer) => {
+    const handleOptionToggle = (option) => {
+        setSelectedOptions(prev => {
+            if (prev.includes(option)) {
+                return prev.filter(o => o !== option);
+            } else {
+                return [...prev, option];
+            }
+        });
+    };
+
+    const handleSend = () => {
+        if (selectedOptions.length === 0) return;
+
+        const answer = selectedOptions.join(', ');
         setShowOptions(false);
         setMessages((m) => [...m, { type: 'user', text: answer }]);
         setTimeout(() => {
@@ -168,28 +183,46 @@ export default function AIChat() {
                                 exit={{ opacity: 0, y: 10 }}
                                 className="flex flex-wrap gap-2.5 justify-center mb-4"
                             >
-                                {CLIENT_QUESTIONS[step].options.map((opt, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => handleAnswer(opt)}
-                                        className="group relative px-5 py-2.5 rounded-full bg-white dark:bg-[#1E1E1E] text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-white/10 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-white dark:hover:bg-[#252525] shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 text-sm font-medium"
-                                    >
-                                        {opt}
-                                        <ChevronRight size={14} className="opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
-                                    </button>
-                                ))}
+                                {CLIENT_QUESTIONS[step].options.map((opt, idx) => {
+                                    const isSelected = selectedOptions.includes(opt);
+                                    return (
+                                        <button
+                                            key={idx}
+                                            onClick={() => handleOptionToggle(opt)}
+                                            className={`group relative px-5 py-2.5 rounded-full border shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 text-sm font-medium
+                                                ${isSelected
+                                                    ? 'bg-indigo-600 text-white border-indigo-600'
+                                                    : 'bg-white dark:bg-[#1E1E1E] text-gray-800 dark:text-gray-200 border-gray-200 dark:border-white/10 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-white dark:hover:bg-[#252525]'
+                                                }`}
+                                        >
+                                            {opt}
+                                            {isSelected && <Sparkles size={14} className="text-white animate-pulse" />}
+                                        </button>
+                                    );
+                                })}
                             </motion.div>
                         ) : null}
                     </AnimatePresence>
 
-                    {/* Fake Input */}
+                    {/* Input Area */}
                     <div className="relative">
-                        <div className="w-full h-12 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-white/10 rounded-full flex items-center px-5 text-gray-400 shadow-inner">
-                            <span className="text-sm">Type a message...</span>
-                        </div>
-                        <div className="absolute right-1.5 top-1.5 bottom-1.5 aspect-square bg-indigo-500 dark:bg-[#2A2A2A] rounded-full flex items-center justify-center text-white dark:text-gray-400 shadow-sm">
+                        <input
+                            type="text"
+                            value={selectedOptions.join(', ')}
+                            readOnly
+                            placeholder="Select options above..."
+                            className="w-full h-12 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-white/10 rounded-full px-5 text-gray-900 dark:text-gray-100 shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium placeholder-gray-400"
+                        />
+                        <button
+                            onClick={handleSend}
+                            disabled={selectedOptions.length === 0}
+                            className={`absolute right-1.5 top-1.5 bottom-1.5 aspect-square rounded-full flex items-center justify-center text-white shadow-sm transition-all duration-200 ${selectedOptions.length > 0
+                                    ? 'bg-indigo-500 hover:bg-indigo-600 active:scale-95'
+                                    : 'bg-gray-300 dark:bg-[#2A2A2A] text-gray-400 cursor-not-allowed'
+                                }`}
+                        >
                             <Send size={16} />
-                        </div>
+                        </button>
                     </div>
                 </div>
             </div>

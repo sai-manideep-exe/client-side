@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Calendar, User, Heart, Send, X, TrendingUp, CheckCircle, AlertCircle, Moon, Sun, Loader2, Sparkles, ChevronRight, MessageCircle } from 'lucide-react';
+import { Home, Calendar, User, Heart, Send, X, TrendingUp, CheckCircle, AlertCircle, Moon, Sun, Loader2, Sparkles, ChevronRight, MessageCircle, GraduationCap, MapPin, ShoppingBag, Dumbbell, Coffee, Train, Music } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MOCK_MATCHES, MOCK_VISITS, CLIENT_QUESTIONS } from '../data/mockData';
 
@@ -10,6 +10,10 @@ export default function ClientDashboard() {
     const [visitStatus, setVisitStatus] = useState('idle'); // idle | loading | success
     const [visits, setVisits] = useState(MOCK_VISITS);
     const [matches, setMatches] = useState([]); // Initially empty, populated after chat
+    const [savedIds, setSavedIds] = useState(new Set());
+    const [isComparing, setIsComparing] = useState(false);
+    const [selectedForCompare, setSelectedForCompare] = useState([]);
+    const [showCompareModal, setShowCompareModal] = useState(false);
 
     // Chat State
     const [messages, setMessages] = useState([
@@ -21,6 +25,7 @@ export default function ClientDashboard() {
     const [step, setStep] = useState(0);
     const [showOptions, setShowOptions] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
+    const [selectedOptions, setSelectedOptions] = useState([]);
     const chatEndRef = useRef(null);
     const hasChatStarted = useRef(false);
 
@@ -58,10 +63,24 @@ export default function ClientDashboard() {
             setIsTyping(false);
             setMessages((m) => [...m, { type: 'bot', text: CLIENT_QUESTIONS[i].text }]);
             setShowOptions(true);
+            setSelectedOptions([]); // Reset 
         }, 1500);
     };
 
-    const handleAnswer = (answer) => {
+    const handleOptionToggle = (option) => {
+        setSelectedOptions(prev => {
+            if (prev.includes(option)) {
+                return prev.filter(o => o !== option);
+            } else {
+                return [...prev, option];
+            }
+        });
+    };
+
+    const handleSend = () => {
+        if (selectedOptions.length === 0) return;
+
+        const answer = selectedOptions.join(', ');
         setShowOptions(false);
         setMessages((m) => [...m, { type: 'user', text: answer }]);
         setTimeout(() => {
@@ -111,6 +130,7 @@ export default function ClientDashboard() {
                 <div className="flex items-center gap-3">
                     <h1 className="text-lg font-bold">
                         {tab === 'matches' && 'Your Matches'}
+                        {tab === 'saved' && 'Saved Homes'}
                         {tab === 'visits' && 'Scheduled Visits'}
                         {tab === 'profile' && 'Profile'}
                         {tab === 'chat' && 'AI Assistant'}
@@ -121,13 +141,7 @@ export default function ClientDashboard() {
                         </span>
                     )}
                 </div>
-                <div className="w-8 h-8 rounded-full bg-gray-200 dark:bg-gray-800 overflow-hidden border border-gray-300 dark:border-white/10">
-                    <img
-                        src="https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=200&q=80"
-                        alt="avatar"
-                        className="w-full h-full object-cover"
-                    />
-                </div>
+
             </div>
 
             <div className="h-full">
@@ -209,63 +223,168 @@ export default function ClientDashboard() {
                                         exit={{ opacity: 0, y: 10 }}
                                         className="flex flex-wrap gap-2.5 justify-center mb-4"
                                     >
-                                        {CLIENT_QUESTIONS[step].options.map((opt, idx) => (
-                                            <button
-                                                key={idx}
-                                                onClick={() => handleAnswer(opt)}
-                                                className="group relative px-5 py-2.5 rounded-full bg-white dark:bg-[#1E1E1E] text-gray-800 dark:text-gray-200 border border-gray-200 dark:border-white/10 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-white dark:hover:bg-[#252525] shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 text-sm font-medium"
-                                            >
-                                                {opt}
-                                                <ChevronRight size={14} className="opacity-0 -ml-2 group-hover:opacity-100 group-hover:ml-0 transition-all duration-200" />
-                                            </button>
-                                        ))}
+                                        {CLIENT_QUESTIONS[step].options.map((opt, idx) => {
+                                            const isSelected = selectedOptions.includes(opt);
+                                            return (
+                                                <button
+                                                    key={idx}
+                                                    onClick={() => handleOptionToggle(opt)}
+                                                    className={`group relative px-5 py-2.5 rounded-full border shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 text-sm font-medium
+                                                        ${isSelected
+                                                            ? 'bg-indigo-600 text-white border-indigo-600'
+                                                            : 'bg-white dark:bg-[#1E1E1E] text-gray-800 dark:text-gray-200 border-gray-200 dark:border-white/10 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-white dark:hover:bg-[#252525]'
+                                                        }`}
+                                                >
+                                                    {opt}
+                                                    {isSelected && <Sparkles size={14} className="text-white animate-pulse" />}
+                                                </button>
+                                            );
+                                        })}
                                     </motion.div>
                                 ) : null}
                             </AnimatePresence>
 
-                            {/* Fake Input */}
+                            {/* Input Area */}
                             <div className="relative max-w-3xl mx-auto">
-                                <div className="w-full h-12 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-white/10 rounded-full flex items-center px-5 text-gray-400 shadow-inner">
-                                    <span className="text-sm">Type a message...</span>
-                                </div>
-                                <div className="absolute right-1.5 top-1.5 bottom-1.5 aspect-square bg-indigo-500 dark:bg-[#2A2A2A] rounded-full flex items-center justify-center text-white dark:text-gray-400 shadow-sm">
+                                <input
+                                    type="text"
+                                    value={selectedOptions.join(', ')}
+                                    readOnly
+                                    placeholder="Select options above..."
+                                    className="w-full h-12 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-white/10 rounded-full px-5 text-gray-900 dark:text-gray-100 shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium placeholder-gray-400"
+                                />
+                                <button
+                                    onClick={handleSend}
+                                    disabled={selectedOptions.length === 0}
+                                    className={`absolute right-1.5 top-1.5 bottom-1.5 aspect-square rounded-full flex items-center justify-center text-white shadow-sm transition-all duration-200 ${selectedOptions.length > 0
+                                        ? 'bg-indigo-500 hover:bg-indigo-600 active:scale-95'
+                                        : 'bg-gray-300 dark:bg-[#2A2A2A] text-gray-400 cursor-not-allowed'
+                                        }`}
+                                >
                                     <Send size={16} />
-                                </div>
+                                </button>
                             </div>
                         </div>
                     </div>
                 )}
 
-                {/* Matches */}
-                {(tab === 'matches' || tab === 'visits' || tab === 'profile') && (
+                {/* Matches & Saved Tabs */}
+                {(tab === 'matches' || tab === 'saved' || tab === 'visits' || tab === 'profile') && (
                     <div className="p-4 space-y-4 pb-24">
-                        {tab === 'matches' && (
-                            <>
-                                {matches.length > 0 ? (
-                                    <>
-                                        <div className="bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 p-4 rounded-2xl border border-indigo-200 dark:border-indigo-500/20 mb-6 flex items-start gap-3">
-                                            <div className="p-2 bg-indigo-500 rounded-lg shrink-0">
-                                                <Send size={16} className="text-white" />
+                        {(tab === 'matches' || tab === 'saved') && (
+                            (() => {
+                                const displayedMatches = tab === 'saved'
+                                    ? matches.filter(m => savedIds.has(m.id))
+                                    : matches;
+
+                                if (displayedMatches.length === 0) {
+                                    return (
+                                        <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
+                                            <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-500/10 rounded-full flex items-center justify-center mb-6">
+                                                {tab === 'saved' ? <Heart size={32} className="text-red-500" /> : <Sparkles size={32} className="text-indigo-500 dark:text-indigo-400" />}
                                             </div>
-                                            <div>
-                                                <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Shared by Alex</h3>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400">
-                                                    “Based on our chat, I’ve shortlisted these {matches.length} homes. Tap any card for full AI analysis.”
-                                                </p>
-                                            </div>
+                                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
+                                                {tab === 'saved' ? 'No Saved Properties' : 'No Matches Yet'}
+                                            </h3>
+                                            <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mb-8">
+                                                {tab === 'saved' ? 'Tap the heart icon on any property to save it here for later.' : 'Chat with our AI Assistant to help us understand your dream home criteria.'}
+                                            </p>
+                                            {tab === 'matches' && <button
+                                                onClick={() => setTab('chat')}
+                                                className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/25"
+                                            >
+                                                Start AI Chat
+                                            </button>}
                                         </div>
-                                        {matches.map((p) => (
+                                    );
+                                }
+
+                                return (
+                                    <>
+                                        {/* Banner - Matches Only */}
+                                        {tab === 'matches' && (
+                                            <div className="bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 p-4 rounded-2xl border border-indigo-200 dark:border-indigo-500/20 mb-6 flex items-start gap-3">
+                                                <div className="p-2 bg-indigo-500 rounded-lg shrink-0">
+                                                    <Send size={16} className="text-white" />
+                                                </div>
+                                                <div>
+                                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">Shared by Alex</h3>
+                                                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                                                        “Based on our chat, I’ve shortlisted these {matches.length} homes. Tap any card for full AI analysis.”
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* Compare Toggle */}
+                                        <div className="flex justify-end px-2 mb-2">
+                                            <button
+                                                onClick={() => {
+                                                    setIsComparing(!isComparing);
+                                                    setSelectedForCompare([]);
+                                                    setShowCompareModal(false);
+                                                }}
+                                                className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${isComparing
+                                                    ? 'bg-indigo-600 text-white'
+                                                    : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-white/10'
+                                                    }`}
+                                            >
+                                                {isComparing ? <X size={14} /> : <TrendingUp size={14} />}
+                                                {isComparing ? 'Cancel Compare' : 'Compare Properties'}
+                                            </button>
+                                        </div>
+
+                                        {/* List */}
+                                        {displayedMatches.map((p) => (
                                             <motion.div
                                                 key={p.id}
                                                 whileTap={{ scale: 0.98 }}
-                                                onClick={() => setSelectedProperty(p)}
-                                                className="bg-white dark:bg-[#121212] rounded-[1.5rem] border border-gray-100 dark:border-white/5 overflow-hidden group shadow-md dark:shadow-lg cursor-pointer transition-all hover:border-indigo-500/30"
+                                                onClick={() => {
+                                                    if (isComparing) {
+                                                        if (selectedForCompare.includes(p.id)) {
+                                                            setSelectedForCompare(prev => prev.filter(id => id !== p.id));
+                                                        } else {
+                                                            if (selectedForCompare.length < 3) {
+                                                                setSelectedForCompare(prev => [...prev, p.id]);
+                                                            }
+                                                        }
+                                                    } else {
+                                                        setSelectedProperty(p);
+                                                    }
+                                                }}
+                                                className={`rounded-[1.5rem] border overflow-hidden group shadow-md dark:shadow-lg cursor-pointer transition-all hover:border-indigo-500/30 ${isComparing && selectedForCompare.includes(p.id)
+                                                    ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500 ring-2 ring-indigo-500'
+                                                    : 'bg-white dark:bg-[#121212] border-gray-100 dark:border-white/5'
+                                                    }`}
                                             >
                                                 <div className="relative h-48">
                                                     <img src={p.image} alt={p.address} className="w-full h-full object-cover" />
-                                                    <div className="absolute top-3 right-3 w-8 h-8 bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-red-500 transition-all">
-                                                        <Heart size={16} />
-                                                    </div>
+                                                    {/* Selection Indicator for Compare Mode */}
+                                                    {isComparing && (
+                                                        <div className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10 ${selectedForCompare.includes(p.id) ? 'bg-indigo-600 text-white' : 'bg-black/40 text-transparent border-2 border-white'
+                                                            }`}>
+                                                            <CheckCircle size={16} className={selectedForCompare.includes(p.id) ? 'opacity-100' : 'opacity-0'} />
+                                                        </div>
+                                                    )}
+
+                                                    {!isComparing && (
+                                                        <div
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setSavedIds(prev => {
+                                                                    const next = new Set(prev);
+                                                                    if (next.has(p.id)) next.delete(p.id);
+                                                                    else next.add(p.id);
+                                                                    return next;
+                                                                });
+                                                            }}
+                                                            className={`absolute top-3 right-3 w-8 h-8 backdrop-blur-md rounded-full flex items-center justify-center transition-all ${savedIds.has(p.id) ? 'bg-red-500 text-white' : 'bg-black/40 text-white hover:bg-black/60'
+                                                                }`}
+                                                        >
+                                                            <Heart size={16} fill={savedIds.has(p.id) ? "currentColor" : "none"} />
+                                                        </div>
+                                                    )}
+
                                                     {p.tags.includes('Realtor Pick') && (
                                                         <div className="absolute top-3 left-3 bg-indigo-600 text-[10px] font-bold px-2 py-1 rounded-full shadow-lg text-white">
                                                             Realtor Pick
@@ -290,33 +409,27 @@ export default function ClientDashboard() {
                                                         <TrendingUp size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
                                                         <p className="text-xs text-gray-600 dark:text-gray-300 italic truncate">“{p.matchReason}”</p>
                                                     </div>
-                                                    <button onClick={(e) => { e.stopPropagation(); setSelectedProperty(p); }} className="w-full bg-gray-900 dark:bg-white text-white dark:text-black font-bold py-3 rounded-xl text-sm hover:bg-gray-800 dark:hover:bg-gray-200 transition-colors shadow-sm">
-                                                        Request Visit
+                                                    <button
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            if (!isComparing) setSelectedProperty(p);
+                                                        }}
+                                                        disabled={isComparing}
+                                                        className={`w-full font-bold py-3 rounded-xl text-sm transition-colors shadow-sm ${isComparing
+                                                            ? 'bg-gray-100 dark:bg-white/5 text-gray-400 cursor-not-allowed'
+                                                            : 'bg-gray-900 dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200'
+                                                            }`}
+                                                    >
+                                                        {isComparing
+                                                            ? (selectedForCompare.includes(p.id) ? 'Selected' : 'Tap to Compare')
+                                                            : 'Request Visit'}
                                                     </button>
                                                 </div>
                                             </motion.div>
                                         ))}
                                     </>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-                                        <div className="w-20 h-20 bg-indigo-50 dark:bg-indigo-500/10 rounded-full flex items-center justify-center mb-6">
-                                            <Sparkles size={32} className="text-indigo-500 dark:text-indigo-400" />
-                                        </div>
-                                        <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                            No Matches Yet
-                                        </h3>
-                                        <p className="text-gray-500 dark:text-gray-400 text-sm max-w-xs mb-8">
-                                            Chat with our AI Assistant to help us understand your dream home criteria.
-                                        </p>
-                                        <button
-                                            onClick={() => setTab('chat')}
-                                            className="px-8 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all shadow-lg shadow-indigo-500/25"
-                                        >
-                                            Start AI Chat
-                                        </button>
-                                    </div>
-                                )}
-                            </>
+                                );
+                            })()
                         )}
 
                         {/* Visits Tab */}
@@ -435,6 +548,40 @@ export default function ClientDashboard() {
                                     </button>
                                 </div>
 
+                                {/* Description */}
+                                {selectedProperty.description && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                                        {selectedProperty.description}
+                                    </p>
+                                )}
+
+                                {/* Features */}
+                                {selectedProperty.features && (
+                                    <div className="space-y-2">
+                                        {selectedProperty.features.map((feature, idx) => (
+                                            <div key={idx} className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                                <span className="text-sm text-gray-700 dark:text-gray-200">{feature}</span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Nearby Amenities */}
+                                {selectedProperty.nearbyAmenities && (
+                                    <div className="grid grid-cols-3 gap-3">
+                                        {selectedProperty.nearbyAmenities.map((amenity, idx) => {
+                                            const Icon = getAmenityIcon(amenity.type);
+                                            return (
+                                                <div key={idx} className="bg-gray-50 dark:bg-white/5 p-3 rounded-xl flex flex-col items-center justify-center text-center gap-1 border border-gray-100 dark:border-white/5">
+                                                    <Icon size={18} className="text-indigo-500 mb-1" />
+                                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{amenity.distance}</span>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
+
                                 {/* AI Score Overview */}
                                 <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 border border-indigo-200 dark:border-indigo-500/20 rounded-2xl p-5 flex items-center gap-5 relative overflow-hidden">
                                     <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-500/10 dark:bg-indigo-500/20 blur-2xl rounded-full" />
@@ -520,17 +667,111 @@ export default function ClientDashboard() {
                 )}
             </AnimatePresence>
 
+            {/* Compare Floating Button */}
+            <AnimatePresence>
+                {isComparing && selectedForCompare.length >= 2 && !showCompareModal && (
+                    <motion.div
+                        initial={{ y: 100 }}
+                        animate={{ y: 0 }}
+                        exit={{ y: 100 }}
+                        className="fixed bottom-24 left-0 right-0 z-40 flex justify-center px-4"
+                    >
+                        <button
+                            onClick={() => setShowCompareModal(true)}
+                            className="bg-gray-900 dark:bg-white text-white dark:text-black font-bold py-3.5 px-8 rounded-full shadow-2xl flex items-center gap-2 hover:scale-105 transition-transform"
+                        >
+                            <TrendingUp size={18} />
+                            Compare ({selectedForCompare.length})
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            {/* Comparison Modal */}
+            <AnimatePresence>
+                {showCompareModal && (
+                    <motion.div
+                        initial={{ opacity: 0, y: '100%' }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: '100%' }}
+                        className="fixed inset-0 z-50 bg-gray-50 dark:bg-[#0E0E0E] flex flex-col"
+                    >
+                        <div className="p-4 border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#121212] flex items-center justify-between">
+                            <h2 className="text-lg font-bold">Comparing {selectedForCompare.length} Homes</h2>
+                            <button
+                                onClick={() => setShowCompareModal(false)}
+                                className="p-2 bg-gray-100 dark:bg-white/5 rounded-full"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 gap-4">
+                            {selectedForCompare.map(id => {
+                                const p = matches.find(m => m.id === id);
+                                return (
+                                    <div key={p.id} className="space-y-4">
+                                        <div className="aspect-[4/3] rounded-xl overflow-hidden relative">
+                                            <img src={p.image} className="w-full h-full object-cover" />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                                            <p className="absolute bottom-2 left-2 text-white font-bold text-sm">{p.price}</p>
+                                        </div>
+                                        <div>
+                                            <h3 className="font-bold text-sm leading-tight mb-1">{p.address}</h3>
+                                            <p className="text-xs text-gray-500">{p.sqft} sqft</p>
+                                        </div>
+
+                                        <div className="space-y-6">
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Specs</p>
+                                                <div className="text-xs font-semibold">{p.beds} Bed • {p.baths} Bath</div>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">AI Score</p>
+                                                <div className="text-sm font-bold text-green-600 dark:text-green-400">{p.aiScore}% Match</div>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Investment</p>
+                                                <div className="text-xs font-semibold">{p.investmentRating}</div>
+                                            </div>
+                                            <div>
+                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Top Feature</p>
+                                                <div className="text-xs text-gray-600 dark:text-gray-300">{p.features?.[0] || 'N/A'}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Bottom navigation */}
             <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-t border-gray-200 dark:border-white/10 p-2 pb-6 z-30 transition-colors">
                 <div className="flex justify-around items-center">
                     <NavBtn icon={MessageCircle} label="Assistant" active={tab === 'chat'} onClick={() => setTab('chat')} />
                     <NavBtn icon={Home} label="Matches" active={tab === 'matches'} onClick={() => setTab('matches')} />
+                    <NavBtn icon={Heart} label="Saved" active={tab === 'saved'} onClick={() => setTab('saved')} />
                     <NavBtn icon={Calendar} label="Visits" active={tab === 'visits'} onClick={() => setTab('visits')} />
                     <NavBtn icon={User} label="Profile" active={tab === 'profile'} onClick={() => setTab('profile')} />
                 </div>
             </div>
         </div>
     );
+}
+
+function getAmenityIcon(type) {
+    switch (type) {
+        case 'School': return GraduationCap;
+        case 'Park': return MapPin;
+        case 'Shopping': return ShoppingBag;
+        case 'Gym': return Dumbbell;
+        case 'Cafe': return Coffee;
+        case 'Transit': return Train;
+        case 'Entertainment': return Music;
+        default: return MapPin;
+    }
 }
 
 function Row({ label, value }) {
