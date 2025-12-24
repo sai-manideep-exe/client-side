@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Home, Calendar, User, Heart, Send, X, TrendingUp, CheckCircle, AlertCircle, Moon, Sun, Loader2, Sparkles, ChevronRight, MessageCircle, GraduationCap, MapPin, ShoppingBag, Dumbbell, Coffee, Train, Music } from 'lucide-react';
+import L from 'leaflet';
+import { useNavigate } from 'react-router-dom';
+import { Home, Calendar, User, Heart, Send, X, TrendingUp, CheckCircle, AlertCircle, Moon, Sun, Loader2, Sparkles, ChevronRight, MessageCircle, GraduationCap, MapPin, ShoppingBag, Dumbbell, Coffee, Train, Music, Map } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { MOCK_MATCHES, MOCK_VISITS, CLIENT_QUESTIONS } from '../data/mockData';
+import 'leaflet/dist/leaflet.css';
 
 export default function ClientDashboard() {
+    const navigate = useNavigate();
     const [tab, setTab] = useState('chat');
     const [selectedProperty, setSelectedProperty] = useState(null);
     const [isDark, setIsDark] = useState(true);
@@ -14,18 +19,20 @@ export default function ClientDashboard() {
     const [isComparing, setIsComparing] = useState(false);
     const [selectedForCompare, setSelectedForCompare] = useState([]);
     const [showCompareModal, setShowCompareModal] = useState(false);
+    const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
 
     // Chat State
     const [messages, setMessages] = useState([
         {
             type: 'bot',
-            text: "Hello! I'm your sophisticated real estate AI. I'm here to find your exceptional home. Let's begin."
+            text: "Hi Yash! I'm your real estate AI. I'm here to find your exceptional home. Let's begin."
         },
     ]);
     const [step, setStep] = useState(0);
     const [showOptions, setShowOptions] = useState(false);
     const [isTyping, setIsTyping] = useState(false);
     const [selectedOptions, setSelectedOptions] = useState([]);
+    const [inputText, setInputText] = useState('');
     const chatEndRef = useRef(null);
     const hasChatStarted = useRef(false);
 
@@ -69,18 +76,20 @@ export default function ClientDashboard() {
 
     const handleOptionToggle = (option) => {
         setSelectedOptions(prev => {
-            if (prev.includes(option)) {
-                return prev.filter(o => o !== option);
-            } else {
-                return [...prev, option];
-            }
+            const next = prev.includes(option)
+                ? prev.filter(o => o !== option)
+                : [...prev, option];
+            setInputText(next.join(', '));
+            return next;
         });
     };
 
     const handleSend = () => {
-        if (selectedOptions.length === 0) return;
+        if (!inputText.trim()) return;
 
-        const answer = selectedOptions.join(', ');
+        const answer = inputText;
+        setSelectedOptions([]);
+        setInputText(''); // Clear input immediately
         setShowOptions(false);
         setMessages((m) => [...m, { type: 'user', text: answer }]);
         setTimeout(() => {
@@ -248,15 +257,15 @@ export default function ClientDashboard() {
                             <div className="relative max-w-3xl mx-auto">
                                 <input
                                     type="text"
-                                    value={selectedOptions.join(', ')}
-                                    readOnly
-                                    placeholder="Select options above..."
+                                    value={inputText}
+                                    onChange={(e) => setInputText(e.target.value)}
+                                    placeholder="Type or select options..."
                                     className="w-full h-12 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-white/10 rounded-full px-5 text-gray-900 dark:text-gray-100 shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium placeholder-gray-400"
                                 />
                                 <button
                                     onClick={handleSend}
-                                    disabled={selectedOptions.length === 0}
-                                    className={`absolute right-1.5 top-1.5 bottom-1.5 aspect-square rounded-full flex items-center justify-center text-white shadow-sm transition-all duration-200 ${selectedOptions.length > 0
+                                    disabled={!inputText.trim()}
+                                    className={`absolute right-1.5 top-1.5 bottom-1.5 aspect-square rounded-full flex items-center justify-center text-white shadow-sm transition-all duration-200 ${inputText.trim()
                                         ? 'bg-indigo-500 hover:bg-indigo-600 active:scale-95'
                                         : 'bg-gray-300 dark:bg-[#2A2A2A] text-gray-400 cursor-not-allowed'
                                         }`}
@@ -316,117 +325,198 @@ export default function ClientDashboard() {
                                             </div>
                                         )}
 
-                                        {/* Compare Toggle */}
-                                        <div className="flex justify-end px-2 mb-2">
-                                            <button
-                                                onClick={() => {
-                                                    setIsComparing(!isComparing);
-                                                    setSelectedForCompare([]);
-                                                    setShowCompareModal(false);
-                                                }}
-                                                className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${isComparing
-                                                    ? 'bg-indigo-600 text-white'
-                                                    : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-white/10'
-                                                    }`}
-                                            >
-                                                {isComparing ? <X size={14} /> : <TrendingUp size={14} />}
-                                                {isComparing ? 'Cancel Compare' : 'Compare Properties'}
-                                            </button>
+                                        {/* Controls */}
+                                        <div className="flex justify-between items-center px-2 mb-4">
+                                            {/* View Toggle */}
+                                            <div className="bg-white dark:bg-white/5 p-1 rounded-xl border border-gray-200 dark:border-white/10 flex gap-1">
+                                                <button
+                                                    onClick={() => setViewMode('list')}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${viewMode === 'list'
+                                                        ? 'bg-gray-900 dark:bg-white text-white dark:text-black shadow-md'
+                                                        : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                                                        }`}
+                                                >
+                                                    <Home size={14} /> List
+                                                </button>
+                                                <button
+                                                    onClick={() => setViewMode('map')}
+                                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${viewMode === 'map'
+                                                        ? 'bg-gray-900 dark:bg-white text-white dark:text-black shadow-md'
+                                                        : 'text-gray-500 hover:text-gray-900 dark:hover:text-white'
+                                                        }`}
+                                                >
+                                                    <Map size={14} /> Map
+                                                </button>
+                                            </div>
+
+                                            {/* Compare Toggle */}
+                                            {viewMode === 'list' && displayedMatches.length > 1 && (
+                                                <button
+                                                    onClick={() => {
+                                                        setIsComparing(!isComparing);
+                                                        setSelectedForCompare([]);
+                                                        setShowCompareModal(false);
+                                                    }}
+                                                    className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${isComparing
+                                                        ? 'bg-indigo-600 text-white'
+                                                        : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-white/10'
+                                                        }`}
+                                                >
+                                                    {isComparing ? <X size={14} /> : <TrendingUp size={14} />}
+                                                    {isComparing ? 'Cancel' : 'Compare'}
+                                                </button>
+                                            )}
                                         </div>
 
-                                        {/* List */}
-                                        {displayedMatches.map((p) => (
-                                            <motion.div
-                                                key={p.id}
-                                                whileTap={{ scale: 0.98 }}
-                                                onClick={() => {
-                                                    if (isComparing) {
-                                                        if (selectedForCompare.includes(p.id)) {
-                                                            setSelectedForCompare(prev => prev.filter(id => id !== p.id));
-                                                        } else {
-                                                            if (selectedForCompare.length < 3) {
-                                                                setSelectedForCompare(prev => [...prev, p.id]);
-                                                            }
+                                        {/* Content */}
+                                        {viewMode === 'map' ? (
+                                            <div className="h-[60vh] rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-inner relative z-0">
+                                                <MapContainer
+                                                    center={[37.3382, -121.8863]}
+                                                    zoom={11}
+                                                    style={{ height: '100%', width: '100%' }}
+                                                    className="z-0"
+                                                >
+                                                    <TileLayer
+                                                        url={isDark
+                                                            ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+                                                            : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png'
                                                         }
-                                                    } else {
-                                                        setSelectedProperty(p);
-                                                    }
-                                                }}
-                                                className={`rounded-[1.5rem] border overflow-hidden group shadow-md dark:shadow-lg cursor-pointer transition-all hover:border-indigo-500/30 ${isComparing && selectedForCompare.includes(p.id)
-                                                    ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500 ring-2 ring-indigo-500'
-                                                    : 'bg-white dark:bg-[#121212] border-gray-100 dark:border-white/5'
-                                                    }`}
-                                            >
-                                                <div className="relative h-48">
-                                                    <img src={p.image} alt={p.address} className="w-full h-full object-cover" />
-                                                    {/* Selection Indicator for Compare Mode */}
-                                                    {isComparing && (
-                                                        <div className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10 ${selectedForCompare.includes(p.id) ? 'bg-indigo-600 text-white' : 'bg-black/40 text-transparent border-2 border-white'
-                                                            }`}>
-                                                            <CheckCircle size={16} className={selectedForCompare.includes(p.id) ? 'opacity-100' : 'opacity-0'} />
-                                                        </div>
-                                                    )}
+                                                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+                                                    />
+                                                    {displayedMatches.map(p => (
+                                                        p.coordinates && (
+                                                            <Marker
+                                                                key={p.id}
+                                                                position={[p.coordinates.lat, p.coordinates.lng]}
+                                                                icon={L.divIcon({
+                                                                    className: 'custom-map-marker',
+                                                                    html: `<div style="
+                                                                        width: 44px; 
+                                                                        height: 44px; 
+                                                                        background: white;
+                                                                        border-radius: 50% 50% 50% 0;
+                                                                        transform: rotate(-45deg);
+                                                                        display: flex;
+                                                                        align-items: center;
+                                                                        justify-content: center;
+                                                                        box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+                                                                        border: 3px solid white;
+                                                                    ">
+                                                                        <div style="
+                                                                            width: 38px;
+                                                                            height: 38px;
+                                                                            border-radius: 50%;
+                                                                            overflow: hidden;
+                                                                            transform: rotate(45deg);
+                                                                        ">
+                                                                            <img src="${p.image}" style="width: 100%; height: 100%; object-fit: cover;" />
+                                                                        </div>
+                                                                    </div>`,
+                                                                    iconSize: [44, 44],
+                                                                    iconAnchor: [22, 53]
+                                                                })}
+                                                                eventHandlers={{
+                                                                    click: () => setSelectedProperty(p),
+                                                                }}
+                                                            />
+                                                        )
+                                                    ))}
+                                                </MapContainer>
+                                            </div>
+                                        ) : (
+                                            displayedMatches.map((p) => (
+                                                <motion.div
+                                                    key={p.id}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    onClick={() => {
+                                                        if (isComparing) {
+                                                            if (selectedForCompare.includes(p.id)) {
+                                                                setSelectedForCompare(prev => prev.filter(id => id !== p.id));
+                                                            } else {
+                                                                if (selectedForCompare.length < 3) {
+                                                                    setSelectedForCompare(prev => [...prev, p.id]);
+                                                                }
+                                                            }
+                                                        } else {
+                                                            setSelectedProperty(p);
+                                                        }
+                                                    }}
+                                                    className={`rounded-[1.5rem] border overflow-hidden group shadow-md dark:shadow-lg cursor-pointer transition-all hover:border-indigo-500/30 ${isComparing && selectedForCompare.includes(p.id)
+                                                        ? 'bg-indigo-50 dark:bg-indigo-500/10 border-indigo-500 ring-2 ring-indigo-500'
+                                                        : 'bg-white dark:bg-[#121212] border-gray-100 dark:border-white/5'
+                                                        }`}
+                                                >
+                                                    <div className="relative h-48">
+                                                        <img src={p.image} alt={p.address} className="w-full h-full object-cover" />
+                                                        {/* Selection Indicator for Compare Mode */}
+                                                        {isComparing && (
+                                                            <div className={`absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center transition-colors z-10 ${selectedForCompare.includes(p.id) ? 'bg-indigo-600 text-white' : 'bg-black/40 text-transparent border-2 border-white'
+                                                                }`}>
+                                                                <CheckCircle size={16} className={selectedForCompare.includes(p.id) ? 'opacity-100' : 'opacity-0'} />
+                                                            </div>
+                                                        )}
 
-                                                    {!isComparing && (
-                                                        <div
+                                                        {!isComparing && (
+                                                            <div
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setSavedIds(prev => {
+                                                                        const next = new Set(prev);
+                                                                        if (next.has(p.id)) next.delete(p.id);
+                                                                        else next.add(p.id);
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                                className={`absolute top-3 right-3 w-8 h-8 backdrop-blur-md rounded-full flex items-center justify-center transition-all ${savedIds.has(p.id) ? 'bg-red-500 text-white' : 'bg-black/40 text-white hover:bg-black/60'
+                                                                    }`}
+                                                            >
+                                                                <Heart size={16} fill={savedIds.has(p.id) ? "currentColor" : "none"} />
+                                                            </div>
+                                                        )}
+
+                                                        {p.tags.includes('Realtor Pick') && (
+                                                            <div className="absolute top-3 left-3 bg-indigo-600 text-[10px] font-bold px-2 py-1 rounded-full shadow-lg text-white">
+                                                                Realtor Pick
+                                                            </div>
+                                                        )}
+                                                        {/* AI Score Badge on Card */}
+                                                        <div className="absolute bottom-3 left-3 bg-white/90 dark:bg-black/60 backdrop-blur-md border border-gray-200 dark:border-white/10 px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-green-500 dark:bg-green-400 animate-pulse" />
+                                                            <span className="text-[10px] font-bold text-gray-900 dark:text-white uppercase tracking-wider">AI Match</span>
+                                                            <span className="text-xs font-bold text-green-600 dark:text-green-400">{p.aiScore}%</span>
+                                                        </div>
+                                                    </div>
+                                                    <div className="p-4">
+                                                        <div className="flex justify-between items-start mb-2">
+                                                            <h2 className="text-lg font-bold text-gray-900 dark:text-white max-w-[70%] leading-tight">{p.address}</h2>
+                                                            <span className="text-indigo-600 dark:text-indigo-400 font-bold">{p.price}</span>
+                                                        </div>
+                                                        <p className="text-gray-500 text-xs mb-3">
+                                                            {p.city} • {p.beds} Beds • {p.baths} Baths
+                                                        </p>
+                                                        <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-3 mb-4 flex items-center gap-2 border border-gray-100 dark:border-transparent">
+                                                            <TrendingUp size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                                                            <p className="text-xs text-gray-600 dark:text-gray-300 italic truncate">“{p.matchReason}”</p>
+                                                        </div>
+                                                        <button
                                                             onClick={(e) => {
                                                                 e.stopPropagation();
-                                                                setSavedIds(prev => {
-                                                                    const next = new Set(prev);
-                                                                    if (next.has(p.id)) next.delete(p.id);
-                                                                    else next.add(p.id);
-                                                                    return next;
-                                                                });
+                                                                if (!isComparing) setSelectedProperty(p);
                                                             }}
-                                                            className={`absolute top-3 right-3 w-8 h-8 backdrop-blur-md rounded-full flex items-center justify-center transition-all ${savedIds.has(p.id) ? 'bg-red-500 text-white' : 'bg-black/40 text-white hover:bg-black/60'
+                                                            disabled={isComparing}
+                                                            className={`w-full font-bold py-3 rounded-xl text-sm transition-colors shadow-sm ${isComparing
+                                                                ? 'bg-gray-100 dark:bg-white/5 text-gray-400 cursor-not-allowed'
+                                                                : 'bg-gray-900 dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200'
                                                                 }`}
                                                         >
-                                                            <Heart size={16} fill={savedIds.has(p.id) ? "currentColor" : "none"} />
-                                                        </div>
-                                                    )}
-
-                                                    {p.tags.includes('Realtor Pick') && (
-                                                        <div className="absolute top-3 left-3 bg-indigo-600 text-[10px] font-bold px-2 py-1 rounded-full shadow-lg text-white">
-                                                            Realtor Pick
-                                                        </div>
-                                                    )}
-                                                    {/* AI Score Badge on Card */}
-                                                    <div className="absolute bottom-3 left-3 bg-white/90 dark:bg-black/60 backdrop-blur-md border border-gray-200 dark:border-white/10 px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-green-500 dark:bg-green-400 animate-pulse" />
-                                                        <span className="text-[10px] font-bold text-gray-900 dark:text-white uppercase tracking-wider">AI Match</span>
-                                                        <span className="text-xs font-bold text-green-600 dark:text-green-400">{p.aiScore}%</span>
+                                                            {isComparing
+                                                                ? (selectedForCompare.includes(p.id) ? 'Selected' : 'Tap to Compare')
+                                                                : 'Request Visit'}
+                                                        </button>
                                                     </div>
-                                                </div>
-                                                <div className="p-4">
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <h2 className="text-lg font-bold text-gray-900 dark:text-white max-w-[70%] leading-tight">{p.address}</h2>
-                                                        <span className="text-indigo-600 dark:text-indigo-400 font-bold">{p.price}</span>
-                                                    </div>
-                                                    <p className="text-gray-500 text-xs mb-3">
-                                                        {p.city} • {p.beds} Beds • {p.baths} Baths
-                                                    </p>
-                                                    <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-3 mb-4 flex items-center gap-2 border border-gray-100 dark:border-transparent">
-                                                        <TrendingUp size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
-                                                        <p className="text-xs text-gray-600 dark:text-gray-300 italic truncate">“{p.matchReason}”</p>
-                                                    </div>
-                                                    <button
-                                                        onClick={(e) => {
-                                                            e.stopPropagation();
-                                                            if (!isComparing) setSelectedProperty(p);
-                                                        }}
-                                                        disabled={isComparing}
-                                                        className={`w-full font-bold py-3 rounded-xl text-sm transition-colors shadow-sm ${isComparing
-                                                            ? 'bg-gray-100 dark:bg-white/5 text-gray-400 cursor-not-allowed'
-                                                            : 'bg-gray-900 dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200'
-                                                            }`}
-                                                    >
-                                                        {isComparing
-                                                            ? (selectedForCompare.includes(p.id) ? 'Selected' : 'Tap to Compare')
-                                                            : 'Request Visit'}
-                                                    </button>
-                                                </div>
-                                            </motion.div>
-                                        ))}
+                                                </motion.div>
+                                            )))}
                                     </>
                                 );
                             })()
@@ -499,7 +589,10 @@ export default function ClientDashboard() {
                                     </div>
                                 </div>
 
-                                <button className="w-full text-red-500 text-sm font-bold py-4 bg-white dark:bg-[#121212] hover:bg-red-50 dark:hover:bg-white/5 rounded-xl transition-colors border border-gray-100 dark:border-white/5 shadow-sm">
+                                <button
+                                    onClick={() => navigate('/')}
+                                    className="w-full text-red-500 text-sm font-bold py-4 bg-white dark:bg-[#121212] hover:bg-red-50 dark:hover:bg-white/5 rounded-xl transition-colors border border-gray-100 dark:border-white/5 shadow-sm"
+                                >
                                     Sign Out
                                 </button>
                             </div>
@@ -710,33 +803,36 @@ export default function ClientDashboard() {
                             {selectedForCompare.map(id => {
                                 const p = matches.find(m => m.id === id);
                                 return (
-                                    <div key={p.id} className="space-y-4">
-                                        <div className="aspect-[4/3] rounded-xl overflow-hidden relative">
+                                    <div key={p.id} className="bg-white dark:bg-[#121212] rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden flex flex-col h-fit">
+                                        <div className="aspect-[4/3] w-full relative">
                                             <img src={p.image} className="w-full h-full object-cover" />
                                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                                             <p className="absolute bottom-2 left-2 text-white font-bold text-sm">{p.price}</p>
                                         </div>
-                                        <div>
-                                            <h3 className="font-bold text-sm leading-tight mb-1">{p.address}</h3>
-                                            <p className="text-xs text-gray-500">{p.sqft} sqft</p>
-                                        </div>
 
-                                        <div className="space-y-6">
-                                            <div>
-                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Specs</p>
-                                                <div className="text-xs font-semibold">{p.beds} Bed • {p.baths} Bath</div>
+                                        <div className="p-3 space-y-4">
+                                            <div className="pb-3 border-b border-gray-100 dark:border-white/5">
+                                                <h3 className="font-bold text-sm leading-tight mb-1">{p.address}</h3>
+                                                <p className="text-xs text-gray-500">{p.sqft} sqft</p>
                                             </div>
-                                            <div>
-                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">AI Score</p>
-                                                <div className="text-sm font-bold text-green-600 dark:text-green-400">{p.aiScore}% Match</div>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Investment</p>
-                                                <div className="text-xs font-semibold">{p.investmentRating}</div>
-                                            </div>
-                                            <div>
-                                                <p className="text-[10px] uppercase font-bold text-gray-400 mb-1">Top Feature</p>
-                                                <div className="text-xs text-gray-600 dark:text-gray-300">{p.features?.[0] || 'N/A'}</div>
+
+                                            <div className="space-y-3">
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Specs</p>
+                                                    <div className="text-xs font-semibold text-gray-900 dark:text-white">{p.beds} Bed • {p.baths} Bath</div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">AI Score</p>
+                                                    <div className="text-sm font-bold text-green-600 dark:text-green-400">{p.aiScore}% Match</div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Investment</p>
+                                                    <div className="text-xs font-semibold text-gray-900 dark:text-white">{p.investmentRating}</div>
+                                                </div>
+                                                <div>
+                                                    <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Top Feature</p>
+                                                    <div className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{p.features?.[0] || 'N/A'}</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>

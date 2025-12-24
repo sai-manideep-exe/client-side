@@ -1,13 +1,13 @@
 export const CLIENT_QUESTIONS = [
     {
-        id: 'beds',
-        text: "How many bedrooms do you need?",
-        options: ['2', '3', '4', '5+'],
-    },
-    {
         id: 'budget',
         text: "What’s your budget range?",
         options: ['$600k–$800k', '$800k–$1M', '$1M+'],
+    },
+    {
+        id: 'beds',
+        text: "How many bedrooms do you need?",
+        options: ['2', '3', '4', '5+'],
     },
     {
         id: 'nearby',
@@ -35,6 +35,7 @@ export const MOCK_MATCHES = [
         beds: 3,
         baths: 2,
         sqft: 1850,
+        coordinates: { lat: 37.3100, lng: -121.9000 },
         image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80',
         description: 'Beautiful historic home with modern updates, pool, and landscaped yard. Located in the heart of Willow Glen.',
         features: [
@@ -62,6 +63,7 @@ export const MOCK_MATCHES = [
         beds: 3,
         baths: 2.5,
         sqft: 2100,
+        coordinates: { lat: 37.4419, lng: -122.1430 },
         image: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?auto=format&fit=crop&w=800&q=80',
         description: 'Modern architectural masterpiece with panoramic bay views. Open concept living with high-end finishes.',
         features: [
@@ -89,6 +91,7 @@ export const MOCK_MATCHES = [
         beds: 2,
         baths: 2,
         sqft: 1200,
+        coordinates: { lat: 37.3382, lng: -121.8863 },
         image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80',
         description: 'Chic industrial loft in the center of downtown. Floor-to-ceiling windows and exposed brick walls.',
         features: [
