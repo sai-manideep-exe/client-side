@@ -114,6 +114,5 @@ export const MOCK_MATCHES = [
 ];
 
 export const MOCK_VISITS = [
-    { id: 1, date: 'Fri, Mar 15', time: '4:00 PM', property: '1248 Oakwood Ave', status: 'Pending' },
-    { id: 2, date: 'Sat, Mar 16', time: '11:00 AM', property: '750 Skyline Blvd', status: 'Confirmed' },
+    { id: 1, date: 'Fri, Mar 15', time: '4:00 PM', property: '550 Main St', status: 'Completed' },
 ];
