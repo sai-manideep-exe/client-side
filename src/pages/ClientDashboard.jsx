@@ -130,9 +130,20 @@ export default function ClientDashboard() {
         // Simulate API call
         setTimeout(() => {
             // Format Date and Time
-            const dateObj = new Date(`${scheduleDate}T${scheduleTime}`);
-            const formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
-            const formattedTime = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+            let formattedDate = 'TBD';
+            let formattedTime = 'TBD';
+
+            if (scheduleDate && scheduleTime) {
+                const dateObj = new Date(`${scheduleDate}T${scheduleTime}`);
+                if (!isNaN(dateObj.getTime())) {
+                    formattedDate = dateObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).toUpperCase();
+                    formattedTime = dateObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+                } else {
+                    // Fallback if parsing fails but strings exist
+                    formattedDate = scheduleDate;
+                    formattedTime = scheduleTime;
+                }
+            }
 
             const newVisit = {
                 id: Date.now(),
@@ -141,7 +152,10 @@ export default function ClientDashboard() {
                 time: formattedTime,
                 status: 'Pending'
             };
-            setVisits([newVisit, ...visits]);
+            setVisits(prev => {
+                const filtered = prev.filter(v => !(v.property === selectedProperty.address && (v.status === 'Reschedule' || v.status === 'Declined' || v.status === 'Action Needed')));
+                return [newVisit, ...filtered];
+            });
             setVisitStatus('success');
 
             // Reset form
@@ -602,21 +616,80 @@ export default function ClientDashboard() {
                                 <div className="space-y-3">
                                     {/* 3. Render dynamic visits */}
                                     {visits.map((v) => (
-                                        <div key={v.id} className="bg-white dark:bg-[#121212] p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex items-center justify-between shadow-sm">
-                                            <div>
-                                                <div className="text-xs font-bold text-gray-500 uppercase mb-1">
-                                                    {v.date} • {v.time}
+                                        <div key={v.id} className="bg-white dark:bg-[#121212] p-4 rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <div>
+                                                    <div className="text-xs font-bold text-gray-500 uppercase mb-1">
+                                                        {v.date} • {v.time}
+                                                    </div>
+                                                    <h3 className="text-gray-900 dark:text-white font-bold text-sm truncate max-w-[200px]">{v.property}</h3>
                                                 </div>
-                                                <h3 className="text-gray-900 dark:text-white font-bold text-sm truncate max-w-[200px]">{v.property}</h3>
+                                                <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${(v.status === 'Confirmed' || v.status === 'Completed')
+                                                    ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/20'
+                                                    : (v.status === 'Declined' || v.status === 'Reschedule')
+                                                        ? 'bg-red-100 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/20'
+                                                        : 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/20'
+                                                    }`}>
+                                                    {v.status === 'Reschedule' ? 'Action Needed' : v.status}
+                                                </div>
                                             </div>
-                                            <div className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${(v.status === 'Confirmed' || v.status === 'Completed') ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-500/20' : 'bg-yellow-100 dark:bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-500/20'}`}>
-                                                {v.status}
-                                            </div>
+
+                                            {(v.status === 'Declined' || v.status === 'Reschedule') && (
+                                                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-white/5">
+                                                    <p className="text-xs text-red-500 mb-2">Realtor requested a new time.</p>
+                                                    {v.note && <p className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-3 bg-gray-50 dark:bg-white/5 p-2 rounded-lg border border-gray-200 dark:border-white/10">"{v.note}"</p>}
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedProperty({
+                                                                address: v.property,
+                                                                price: '$1.2M',
+                                                                pros: ['Prime Location', 'Recently Renovated Kitchen', 'Expansive Backyard'],
+                                                                cons: ['High Property Tax', 'Strict HOA Rules'],
+                                                                features: ['Smart Home System', 'Hardwood Floors', '3 Car Garage'],
+                                                                nearbyAmenities: [],
+                                                                aiScore: 98,
+                                                                investmentRating: 'A',
+                                                                description: 'Revisiting this property. A stunning modern home in the heart of the city.'
+                                                            });
+                                                            setShowScheduleModal(true);
+                                                        }}
+                                                        className="w-full bg-red-50 dark:bg-red-900/10 text-red-600 dark:text-red-400 py-2 rounded-lg text-xs font-bold hover:bg-red-100 dark:hover:bg-red-900/20 transition-colors"
+                                                    >
+                                                        Pick New Time
+                                                    </button>
+                                                </div>
+                                            )}
                                         </div>
                                     ))}
-                                    <div className="mt-8 p-6 text-center text-gray-500">
+                                    <div className="mt-8 p-6 text-center text-gray-500 relative group min-h-[100px]">
                                         <Calendar size={32} className="mx-auto mb-3 opacity-50" />
                                         <p className="text-sm">No more upcoming visits.</p>
+
+                                        {/* Hidden Trigger: REJECT (Bottom Right) */}
+                                        <button
+                                            onClick={() => {
+                                                setVisits(prev => {
+                                                    if (!prev.length) return prev;
+                                                    // Target the NEWEST visit (index 0)
+                                                    return prev.map((v, i) => i === 0 ? { ...v, status: 'Reschedule', note: 'Realtor suggests: Tuesday, 4:00 PM' } : v);
+                                                });
+                                            }}
+                                            className="absolute bottom-2 right-2 w-8 h-8 bg-transparent hover:bg-red-500/10 rounded-full z-10 cursor-alias"
+                                            title="Demo Trigger: Reject Visit"
+                                        />
+
+                                        {/* Hidden Trigger: ACCEPT (Bottom Left) */}
+                                        <button
+                                            onClick={() => {
+                                                setVisits(prev => {
+                                                    if (!prev.length) return prev;
+                                                    // Target the NEWEST visit (index 0)
+                                                    return prev.map((v, i) => i === 0 ? { ...v, status: 'Confirmed' } : v);
+                                                });
+                                            }}
+                                            className="absolute bottom-2 left-2 w-8 h-8 bg-transparent hover:bg-green-500/10 rounded-full z-10 cursor-alias"
+                                            title="Demo Trigger: Accept Visit"
+                                        />
                                     </div>
                                 </div>
                             )}
@@ -820,24 +893,27 @@ export default function ClientDashboard() {
                                         return (
                                             <button
                                                 onClick={(e) => {
-                                                    if (hasVisit) {
+                                                    if (hasVisit && visitStatus === 'idle') {
                                                         closeModal();
                                                         setTab('visits');
                                                     } else {
                                                         handleRequestVisit();
                                                     }
                                                 }}
-                                                disabled={visitStatus !== 'idle' && !hasVisit}
+                                                disabled={visitStatus === 'loading'}
                                                 className={`w-full py-4 rounded-xl text-lg font-bold shadow-lg transition-all flex items-center justify-center gap-2
-                                                    ${hasVisit || visitStatus === 'success'
+                                                    ${(hasVisit || visitStatus === 'success') && visitStatus !== 'loading'
                                                         ? 'bg-green-500 hover:bg-green-600 text-white'
                                                         : 'bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95'
                                                     }
                                                 `}
                                             >
-                                                {visitStatus === 'loading' && <><Loader2 className="animate-spin" /> Booking...</>}
-                                                {(hasVisit || visitStatus === 'success') && <><CheckCircle /> Request Sent!</>}
-                                                {!hasVisit && visitStatus === 'idle' && 'Schedule Private Tour'}
+                                                {visitStatus === 'loading'
+                                                    ? <><Loader2 className="animate-spin" /> Booking...</>
+                                                    : (hasVisit || visitStatus === 'success')
+                                                        ? <><CheckCircle /> Request Sent!</>
+                                                        : 'Schedule Private Tour'
+                                                }
                                             </button>
                                         );
                                     })()}
