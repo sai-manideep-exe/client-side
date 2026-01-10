@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { useNavigate } from 'react-router-dom';
-import { Home, Calendar, User, Heart, Send, X, TrendingUp, CheckCircle, AlertCircle, Moon, Sun, Loader2, Sparkles, ChevronRight, MessageCircle, GraduationCap, MapPin, ShoppingBag, Dumbbell, Coffee, Train, Music, Map, Clock } from 'lucide-react';
+import { Home, Calendar, User, Heart, Send, X, TrendingUp, CheckCircle, AlertCircle, Moon, Sun, Loader2, Sparkles, ChevronRight, MessageCircle, GraduationCap, MapPin, ShoppingBag, Dumbbell, Coffee, Train, Music, Map, Clock, DollarSign } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { MOCK_MATCHES, MOCK_VISITS, CLIENT_QUESTIONS } from '../data/mockData';
@@ -25,6 +25,9 @@ export default function ClientDashboard() {
     const [showScheduleModal, setShowScheduleModal] = useState(false);
     const [scheduleDate, setScheduleDate] = useState('');
     const [scheduleTime, setScheduleTime] = useState('');
+
+    // Property Chat State
+    const [showPropertyChat, setShowPropertyChat] = useState(false);
 
     // Chat State
     const [messages, setMessages] = useState([
@@ -444,6 +447,8 @@ export default function ClientDashboard() {
                                                 )}
                                             </div>
 
+                                            {/* Compare Floating Action Button (Moved to global overlay) */}
+
                                             {/* Content */}
                                             {viewMode === 'map' ? (
                                                 <div className="h-[60vh] md:h-[80vh] rounded-2xl overflow-hidden border border-gray-200 dark:border-white/10 shadow-inner relative z-0">
@@ -845,18 +850,88 @@ export default function ClientDashboard() {
                                     </div>
 
                                     {/* Investment Rating */}
-                                    <div className="flex items-center justify-between bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-100 dark:border-white/5">
-                                        <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-green-100 dark:bg-green-500/20 rounded-lg text-green-600 dark:text-green-400">
-                                                <TrendingUp size={20} />
-                                            </div>
-                                            <div>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Investment Rating</p>
-                                                <p className="text-sm font-bold text-gray-900 dark:text-white">Projected Growth: High</p>
+
+                                    {/* Financial Breakdown (New) */}
+                                    {selectedProperty.financials && (
+                                        <div className="mt-6 mb-6">
+                                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                                <DollarSign size={16} className="text-green-500" /> Estimated Monthly Cost
+                                            </h3>
+                                            <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
+                                                <div className="flex justify-between items-end mb-4">
+                                                    <div>
+                                                        <span className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{selectedProperty.financials.monthlyPayment}</span>
+                                                        <span className="text-sm text-gray-500 font-medium ml-1">/mo</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">Down Payment</span>
+                                                        <span className="font-bold text-gray-900 dark:text-white">{selectedProperty.financials.downPayment}</span>
+                                                    </div>
+                                                </div>
+                                                {/* Simple Bar Visualization */}
+                                                <div className="flex h-2.5 rounded-full overflow-hidden mb-3">
+                                                    <div className="w-[65%] bg-indigo-500" />
+                                                    <div className="w-[25%] bg-purple-500" />
+                                                    <div className="w-[10%] bg-pink-500" />
+                                                </div>
+                                                <div className="flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                                                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Principal & Int</div>
+                                                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Tax ({selectedProperty.financials.propertyTax})</div>
+                                                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-pink-500" /> Ins ({selectedProperty.financials.homeInsurance})</div>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter opacity-80">{selectedProperty.investmentRating}</div>
-                                    </div>
+                                    )}
+
+                                    {/* Investment Scale (New) */}
+                                    {selectedProperty.investment && (
+                                        <div className="mt-6 mb-8">
+                                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                                <TrendingUp size={16} className="text-blue-500" /> 5-Year AI Projection
+                                            </h3>
+                                            <div className="bg-gradient-to-br from-gray-900 to-black text-white rounded-2xl p-6 relative overflow-hidden shadow-lg">
+                                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/30 blur-[50px] rounded-full" />
+                                                <div className="relative z-10 flex justify-between items-center mb-6">
+                                                    <div>
+                                                        <span className="block text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">Predicted Value (2030)</span>
+                                                        <span className="text-2xl font-bold tracking-tight">{selectedProperty.investment.predictedValue5Years}</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="block text-green-400 text-sm font-bold">{selectedProperty.investment.appreciation}</span>
+                                                        <span className="block text-gray-500 text-[10px] font-bold uppercase tracking-wider">Total Appreciation</span>
+                                                    </div>
+                                                </div>
+                                                {/* Fake Line Graph */}
+                                                <div className="flex items-end gap-1.5 h-16 opacity-90">
+                                                    {[30, 35, 42, 45, 48, 55, 60, 68, 75, 82, 90, 100].map((h, i) => (
+                                                        <motion.div
+                                                            key={i}
+                                                            initial={{ height: 0 }}
+                                                            whileInView={{ height: `${h}%` }}
+                                                            transition={{ duration: 0.5, delay: i * 0.05 }}
+                                                            className="flex-1 bg-gradient-to-t from-indigo-500/50 to-indigo-400 rounded-t-[2px]"
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Fallback to old rating if no deep data */}
+                                    {!selectedProperty.investment && (
+                                        <div className="flex items-center justify-between bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-100 dark:border-white/5">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-green-100 dark:bg-green-500/20 rounded-lg text-green-600 dark:text-green-400">
+                                                    <TrendingUp size={20} />
+                                                </div>
+                                                <div>
+                                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Investment Rating</p>
+                                                    <p className="text-sm font-bold text-gray-900 dark:text-white">Projected Growth: High</p>
+                                                </div>
+                                            </div>
+                                            <div className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter opacity-80">{selectedProperty.investmentRating}</div>
+                                        </div>
+                                    )}
 
                                     {/* Pros & Cons */}
                                     <div className="grid grid-cols-2 gap-4">
@@ -887,6 +962,14 @@ export default function ClientDashboard() {
                                     </div>
 
                                     {/* Action Button */}
+                                    {/* Action Button */}
+                                    <button
+                                        onClick={() => setShowPropertyChat(true)}
+                                        className="w-full mb-3 py-4 rounded-xl text-sm font-bold border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 flex items-center justify-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
+                                    >
+                                        <Sparkles size={16} /> Ask AI about this home
+                                    </button>
+
                                     {/* Action Button */}
                                     {(() => {
                                         const hasVisit = visits.some(v => v.property === selectedProperty.address);
@@ -922,6 +1005,15 @@ export default function ClientDashboard() {
                             </motion.div>
                         </motion.div>
                     )}
+                    {/* Property Chat Overlay */}
+                    <AnimatePresence>
+                        {showPropertyChat && (
+                            <PropertyChatOverlay
+                                property={selectedProperty}
+                                onClose={() => setShowPropertyChat(false)}
+                            />
+                        )}
+                    </AnimatePresence>
                 </AnimatePresence>
 
                 {/* Compare Floating Button */}
@@ -944,70 +1036,7 @@ export default function ClientDashboard() {
                     )}
                 </AnimatePresence>
 
-                {/* Comparison Modal */}
-                <AnimatePresence>
-                    {showCompareModal && (
-                        <motion.div
-                            initial={{ opacity: 0, y: '100%' }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: '100%' }}
-                            className="fixed inset-0 z-50 bg-gray-50 dark:bg-[#0E0E0E] md:bg-black/60 md:backdrop-blur-sm flex flex-col md:items-center md:justify-center"
-                        >
-                            <div className="w-full h-full flex flex-col md:w-full md:max-w-6xl md:h-[85vh] md:bg-gray-50 md:dark:bg-[#0E0E0E] md:rounded-3xl md:overflow-hidden md:border md:border-white/10 shrink-0">
-                                <div className="p-4 border-b border-gray-200 dark:border-white/10 bg-white dark:bg-[#121212] flex items-center justify-between">
-                                    <h2 className="text-lg font-bold">Comparing {selectedForCompare.length} Homes</h2>
-                                    <button
-                                        onClick={() => setShowCompareModal(false)}
-                                        className="p-2 bg-gray-100 dark:bg-white/5 rounded-full"
-                                    >
-                                        <X size={20} />
-                                    </button>
-                                </div>
-
-                                <div className="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {selectedForCompare.map(id => {
-                                        const p = matches.find(m => m.id === id);
-                                        return (
-                                            <div key={p.id} className="bg-white dark:bg-[#121212] rounded-2xl border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden flex flex-col h-fit">
-                                                <div className="aspect-[4/3] w-full relative">
-                                                    <img src={p.image} className="w-full h-full object-cover" />
-                                                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                                    <p className="absolute bottom-2 left-2 text-white font-bold text-sm">{p.price}</p>
-                                                </div>
-
-                                                <div className="p-3 space-y-4">
-                                                    <div className="pb-3 border-b border-gray-100 dark:border-white/5">
-                                                        <h3 className="font-bold text-sm leading-tight mb-1">{p.address}</h3>
-                                                        <p className="text-xs text-gray-500">{p.sqft} sqft</p>
-                                                    </div>
-
-                                                    <div className="space-y-3">
-                                                        <div>
-                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Specs</p>
-                                                            <div className="text-xs font-semibold text-gray-900 dark:text-white">{p.beds} Bed • {p.baths} Bath</div>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">AI Score</p>
-                                                            <div className="text-sm font-bold text-green-600 dark:text-green-400">{p.aiScore}% Match</div>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Investment</p>
-                                                            <div className="text-xs font-semibold text-gray-900 dark:text-white">{p.investmentRating}</div>
-                                                        </div>
-                                                        <div>
-                                                            <p className="text-[10px] uppercase font-bold text-gray-400 mb-0.5">Top Feature</p>
-                                                            <div className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">{p.features?.[0] || 'N/A'}</div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                {/* Comparison Modal (Old - Removed) */}
 
                 {/* Schedule Visit Modal */}
                 <AnimatePresence>
@@ -1082,6 +1111,16 @@ export default function ClientDashboard() {
                     )}
                 </AnimatePresence>
 
+                {/* Compare Modal */}
+                <AnimatePresence>
+                    {showCompareModal && (
+                        <CompareModal
+                            properties={matches.filter(m => selectedForCompare.includes(m.id))}
+                            onClose={() => setShowCompareModal(false)}
+                        />
+                    )}
+                </AnimatePresence>
+
                 {/* Bottom navigation (Mobile Only) */}
                 <div className="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-black/90 backdrop-blur-xl border-t border-gray-200 dark:border-white/10 p-2 pb-6 z-30 transition-colors md:hidden">
                     <div className="flex justify-around items-center">
@@ -1098,17 +1137,138 @@ export default function ClientDashboard() {
 }
 
 // Subcomponents
+function PropertyChatOverlay({ property, onClose }) {
+    const [messages, setMessages] = useState([
+        { type: 'bot', text: `Hi! I'm analyzed ${property.address}. Ask me about taxes, schools, neighborhood safety, or investment potential.` }
+    ]);
+    const [input, setInput] = useState('');
+    const [isTyping, setIsTyping] = useState(false);
+    const scrollRef = useRef(null);
+
+    useEffect(() => {
+        scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, [messages, isTyping]);
+
+    const handleSend = () => {
+        if (!input.trim()) return;
+        const userText = input;
+        setInput('');
+        setMessages(prev => [...prev, { type: 'user', text: userText }]);
+        setIsTyping(true);
+
+        setTimeout(() => {
+            setIsTyping(false);
+            let reply = "I don't have that specific data right now, but I can ask your Realtor to find out!";
+
+            // Simple Keyword Matching for Demo
+            if (property.qa) {
+                const lowerInput = userText.toLowerCase();
+                const match = property.qa.find(q => q.keywords.some(k => lowerInput.includes(k)));
+                if (match) reply = match.answer;
+            }
+
+            setMessages(prev => [...prev, { type: 'bot', text: reply }]);
+        }, 1200);
+    };
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+        >
+            <div className="w-full max-w-md bg-white dark:bg-[#1A1A1A] rounded-3xl shadow-2xl overflow-hidden border border-gray-200 dark:border-white/10 flex flex-col h-[600px] max-h-[90vh]">
+                {/* Header */}
+                <div className="p-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-gray-50 dark:bg-white/5">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-indigo-500 flex items-center justify-center text-white shadow-lg">
+                            <Sparkles size={18} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-gray-900 dark:text-white">AI Assistant</h3>
+                            <p className="text-xs text-green-500 font-bold flex items-center gap-1">
+                                <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" /> Online
+                            </p>
+                        </div>
+                    </div>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-full transition-colors">
+                        <X size={20} className="text-gray-500" />
+                    </button>
+                </div>
+
+                {/* Chat Area */}
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50/50 dark:bg-black/20">
+                    {messages.map((m, i) => (
+                        <motion.div
+                            key={i}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`flex ${m.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                            <div className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${m.type === 'user'
+                                ? 'bg-indigo-600 text-white rounded-br-sm'
+                                : 'bg-white dark:bg-[#2A2A2A] text-gray-800 dark:text-gray-200 border border-gray-100 dark:border-white/5 rounded-tl-sm shadow-sm'
+                                }`}>
+                                {m.text}
+                            </div>
+                        </motion.div>
+                    ))}
+                    {isTyping && (
+                        <div className="flex justify-start">
+                            <div className="bg-white dark:bg-[#2A2A2A] rounded-2xl rounded-tl-sm px-4 py-3 border border-gray-100 dark:border-white/5 shadow-sm">
+                                <div className="flex gap-1">
+                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" />
+                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-100" />
+                                    <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce delay-200" />
+                                </div>
+                            </div>
+                        </div>
+                    )}
+                    <div ref={scrollRef} />
+                </div>
+
+                {/* Input Area */}
+                <div className="p-4 bg-white dark:bg-[#1A1A1A] border-t border-gray-100 dark:border-white/5">
+                    <div className="relative">
+                        <input
+                            type="text"
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                            placeholder="Ask about taxes, schools, etc..."
+                            className="w-full bg-gray-100 dark:bg-white/5 border-none rounded-xl py-3.5 pl-4 pr-12 text-sm font-medium focus:ring-2 focus:ring-indigo-500/50 transition-all text-gray-900 dark:text-white"
+                        />
+                        <button
+                            onClick={handleSend}
+                            disabled={!input.trim()}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            <Send size={16} />
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+}
+
 const NavSidebarItem = ({ icon: Icon, label, active, onClick }) => (
     <button
         onClick={onClick}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${active
-            ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/25'
-            : 'text-gray-500 hover:bg-gray-100 dark:hover:bg-white/5 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${active
+            ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
+            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
             }`}
     >
-        <Icon size={20} className={active ? 'text-white' : 'text-current'} />
-        <span className={`font-semibold text-sm ${active ? 'text-white' : 'text-current'}`}>{label}</span>
-        {active && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-white/50" />}
+        <Icon size={20} className={`transition-colors ${active ? 'fill-current' : ''}`} />
+        <span className="font-bold text-sm">{label}</span>
+        {active && (
+            <motion.div
+                layoutId="sidebar-active"
+                className="absolute right-0 w-1 h-8 bg-indigo-500 rounded-l-full"
+            />
+        )}
     </button>
 );
 
@@ -1144,5 +1304,105 @@ function NavBtn({ icon: Icon, label, active, onClick }) {
             <Icon size={22} strokeWidth={active ? 2.5 : 2} />
             <span className="text-[10px] font-medium">{label}</span>
         </button>
+    );
+}
+
+function CompareModal({ properties, onClose }) {
+    return (
+        <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm animate-in fade-in">
+            <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                className="bg-white dark:bg-[#121212] w-full max-w-4xl h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-[2rem] sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden"
+            >
+                {/* Header */}
+                <div className="p-4 border-b border-gray-100 dark:border-white/5 flex justify-between items-center bg-gray-50 dark:bg-white/5 sticky top-0 z-10">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                        <TrendingUp size={20} className="text-indigo-500" />
+                        AI Comparison
+                    </h3>
+                    <button onClick={onClose} className="p-2 hover:bg-gray-200 dark:hover:bg-white/10 rounded-full">
+                        <X size={20} className="text-gray-500" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-x-auto overflow-y-auto p-6 scrollbar-hide">
+                    <div className="min-w-[600px] grid" style={{ gridTemplateColumns: `150px repeat(${properties.length}, 1fr)` }}>
+
+                        {/* Property Headers */}
+                        <div className="col-span-1"></div>
+                        {properties.map(p => (
+                            <div key={p.id} className="px-4 pb-6 flex flex-col items-center text-center">
+                                <div className="w-24 h-24 rounded-2xl overflow-hidden mb-3 shadow-md">
+                                    <img src={p.image} className="w-full h-full object-cover" />
+                                </div>
+                                <h4 className="font-bold text-sm text-gray-900 dark:text-white leading-tight mb-1">{p.address.split(',')[0]}</h4>
+                                <span className="text-indigo-600 dark:text-indigo-400 font-bold text-xs">{p.price}</span>
+                            </div>
+                        ))}
+
+                        {/* Comparison Rows */}
+                        <CompareRow label="AI Match Score" values={properties.map(p => ({
+                            content: `${p.aiScore}%`,
+                            highlight: p.aiScore >= Math.max(...properties.map(x => x.aiScore))
+                        }))} />
+
+                        <CompareRow label="Beds / Baths" values={properties.map(p => ({ content: `${p.beds}bd / ${p.baths}ba` }))} />
+                        <CompareRow label="SqFt" values={properties.map(p => ({ content: p.specs?.split('•')[2] || '2,400 sqft' }))} />
+
+                        <CompareRow label="Investment Rating" values={properties.map(p => {
+                            const rating = p.investment?.rating || 'B+';
+                            const color = rating.startsWith('A') ? 'text-green-500' : rating.startsWith('B') ? 'text-blue-500' : 'text-orange-500';
+                            return { content: rating, className: `font-black text-lg ${color}` };
+                        })} />
+
+                        <CompareRow label="Projected Appr." values={properties.map(p => ({
+                            content: p.investment?.projectedValue ? `+${Math.floor(Math.random() * 15 + 10)}% (5yr)` : '+12% (5yr)',
+                            className: 'text-green-600 dark:text-green-400 font-bold'
+                        }))} />
+
+                        <CompareRow label="School Rating" values={properties.map(p => ({
+                            content: p.schools ? `${p.schools[0]?.rating}/10` : '8/10'
+                        }))} />
+
+                        <CompareRow label="Noise Level" values={properties.map(p => ({
+                            content: Math.random() > 0.5 ? 'Low (Quiet St)' : 'Medium'
+                        }))} />
+
+                        {/* AI Summary Row */}
+                        <div className="col-span-full mt-6 pt-6 border-t border-gray-100 dark:border-white/5">
+                            <h4 className="font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                <Sparkles size={16} className="text-indigo-500" />
+                                AI Verdict
+                            </h4>
+                            <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${properties.length}, 1fr)`, marginLeft: '150px' }}>
+                                {properties.map(p => (
+                                    <div key={p.id} className="bg-indigo-50 dark:bg-white/5 p-3 rounded-xl text-[11px] text-gray-600 dark:text-gray-300 leading-relaxed border border-indigo-100 dark:border-white/5">
+                                        "{p.matchReason} However, consider that {p.address.split(' ')[1]} offers better long-term value due to the upcoming school district rezoning."
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </motion.div>
+        </div>
+    );
+}
+
+function CompareRow({ label, values }) {
+    return (
+        <>
+            <div className="py-4 text-xs font-bold text-gray-400 uppercase tracking-wide flex items-center border-b border-gray-50 dark:border-white/5">
+                {label}
+            </div>
+            {values.map((v, i) => (
+                <div key={i} className={`py-4 px-4 text-sm font-medium text-gray-700 dark:text-gray-300 text-center border-b border-gray-50 dark:border-white/5 ${v.highlight ? 'bg-green-50 dark:bg-green-900/10 rounded-lg' : ''}`}>
+                    <span className={v.className}>{v.content}</span>
+                </div>
+            ))}
+        </>
     );
 }

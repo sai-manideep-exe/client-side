@@ -52,6 +52,45 @@ export const MOCK_MATCHES = [
         tags: ['Realtor Pick', 'Best Value'],
         aiScore: 98,
         investmentRating: 'A+',
+        financials: {
+            monthlyPayment: '$5,820',
+            downPayment: '20%',
+            propertyTax: '$10,500/yr',
+            hoa: '$0/mo',
+            homeInsurance: '$1,200/yr'
+        },
+        investment: {
+            growthRate: '5.2%',
+            predictedValue5Years: '$1,280,000',
+            appreciation: '+$295k'
+        },
+        schools: [
+            { name: 'Booksin Elementary', rating: '9/10', distance: '0.4 mi' },
+            { name: 'Willow Glen Middle', rating: '8/10', distance: '1.2 mi' },
+            { name: 'Willow Glen High', rating: '8/10', distance: '1.5 mi' }
+        ],
+        qa: [
+            {
+                keywords: ['tax', 'taxes', 'property tax'],
+                answer: "The property taxes are approx. $10,500/year (1.08% rate). There are no Mello-Roos or special assessments in this specific zone."
+            },
+            {
+                keywords: ['school', 'schools', 'education', 'kids'],
+                answer: "This home is in the coveted Booksin Elementary boundary (9/10 rating). It's widely considered one of the best school zones in San Jose."
+            },
+            {
+                keywords: ['invest', 'investment', 'growth', 'worth', 'value'],
+                answer: "Excellent long-term hold. Willow Glen has appreciated 42% in the last 5 years. Our AI projects this home reaching $1.28M by 2029."
+            },
+            {
+                keywords: ['noise', 'quiet', 'busy', 'street'],
+                answer: "Oakwood Ave is a low-traffic residential street. Noise levels are rated 'Very Low' (42dB average) by local sensors."
+            },
+            {
+                keywords: ['flood', 'safety', 'crime'],
+                answer: "Crime score is A (Top 10% safest). The property is in Flood Zone X (Minimal Risk), so pricey flood insurance isn't required."
+            }
+        ],
         pros: ['12 min commute to downtown', 'Top-rated school district', 'Recently renovated kitchen'],
         cons: ['Smaller backyard', 'Street parking only'],
     },
@@ -80,6 +119,32 @@ export const MOCK_MATCHES = [
         tags: ['Hot Location'],
         aiScore: 89,
         investmentRating: 'A',
+        financials: {
+            monthlyPayment: '$7,200',
+            downPayment: '20%',
+            propertyTax: '$13,200/yr',
+            hoa: '$250/mo',
+            homeInsurance: '$1,500/yr'
+        },
+        investment: {
+            growthRate: '6.5%',
+            predictedValue5Years: '$1,750,000',
+            appreciation: '+$500k'
+        },
+        qa: [
+            {
+                keywords: ['view', 'views', 'scenery'],
+                answer: "The panoramic views of the Bay are protected by a local easement, ensuring no future development will block your sightline."
+            },
+            {
+                keywords: ['hoa', 'fees', 'cost'],
+                answer: "HOA fees are $250/mo which covers the private road maintenance and community security patrol."
+            },
+            {
+                keywords: ['invest', 'value', 'growth'],
+                answer: "Palo Alto Hills is a high-growth zone. We project a 6.5% annual appreciation due to limited inventory."
+            }
+        ],
         pros: ['Only 5 min commute', 'High appreciation potential', 'Open floor plan'],
         cons: ['Above initial budget', 'HOA fees apply'],
     },
@@ -108,6 +173,32 @@ export const MOCK_MATCHES = [
         tags: [],
         aiScore: 82,
         investmentRating: 'B+',
+        financials: {
+            monthlyPayment: '$4,900',
+            downPayment: '20%',
+            propertyTax: '$9,100/yr',
+            hoa: '$450/mo',
+            homeInsurance: '$900/yr'
+        },
+        investment: {
+            growthRate: '4.1%',
+            predictedValue5Years: '$1,020,000',
+            appreciation: '+$170k'
+        },
+        qa: [
+            {
+                keywords: ['parking', 'car', 'garage'],
+                answer: "This unit comes with 1 assigned underground spot. Additional permits can be purchased from the city for street parking."
+            },
+            {
+                keywords: ['noise', 'sound', 'quiet'],
+                answer: "Being downtown, ambient noise is medium (55dB). However, the unit features triple-pane glass which reduces internal noise significantly."
+            },
+            {
+                keywords: ['rent', 'rental', 'airbnb'],
+                answer: "The HOA allows minimum 30-day rentals, making this a viable corporate housing investment property."
+            }
+        ],
         pros: ['Significantly under budget', 'Gym & Pool in building', 'Walkable to restaurants'],
         cons: ['No dedicated parking', 'Smaller square footage'],
     },
