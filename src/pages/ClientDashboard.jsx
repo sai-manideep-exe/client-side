@@ -5,10 +5,12 @@ import { Home, Calendar, User, Heart, Send, X, TrendingUp, CheckCircle, AlertCir
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { MOCK_MATCHES, MOCK_VISITS, CLIENT_QUESTIONS } from '../data/mockData';
+import { useBrand } from '../context/BrandContext';
 import 'leaflet/dist/leaflet.css';
 
 export default function ClientDashboard() {
     const navigate = useNavigate();
+    const { name: brandName, aiName, primaryColor } = useBrand();
     const [tab, setTab] = useState('chat');
     const [selectedProperty, setSelectedProperty] = useState(null);
     const [isDark, setIsDark] = useState(true);
@@ -33,7 +35,7 @@ export default function ClientDashboard() {
     const [messages, setMessages] = useState([
         {
             type: 'bot',
-            text: "Hi Yash! I'm your real estate AI. I'm here to find your exceptional home. Let's begin."
+            text: `Hi Yash! I'm ${aiName}, your private concierge for ${brandName}. Let's find your exceptional home.`
         },
     ]);
     const [step, setStep] = useState(0);
@@ -179,12 +181,12 @@ export default function ClientDashboard() {
             {/* Desktop Sidebar */}
             <div className="hidden md:flex flex-col w-64 border-r border-gray-200 dark:border-white/5 bg-white dark:bg-black p-4 z-40 sticky top-0 h-screen">
                 <div className="flex items-center gap-3 px-4 mb-8">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-full bg-brand-primary flex items-center justify-center shadow-lg shadow-brand-primary/30">
                         <Sparkles size={16} className="text-white" />
                     </div>
                     <div>
-                        <h2 className="font-bold text-lg tracking-tight">AI</h2>
-                        <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider">Real Estate</span>
+                        <h2 className="font-bold text-lg tracking-tight">{aiName}</h2>
+                        <span className="text-[10px] uppercase font-bold text-gray-500 tracking-wider transform -translate-y-0.5 block">{brandName}</span>
                     </div>
                 </div>
 
@@ -217,7 +219,7 @@ export default function ClientDashboard() {
                             {tab === 'saved' && 'Saved Homes'}
                             {tab === 'visits' && 'Scheduled Visits'}
                             {tab === 'profile' && 'Profile'}
-                            {tab === 'chat' && 'AI Assistant'}
+                            {tab === 'chat' && aiName}
                         </h1>
                         {tab === 'chat' && (
                             <span className="px-2 py-1 rounded-full bg-indigo-100 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 text-[10px] font-bold tracking-wider uppercase border border-indigo-200 dark:border-indigo-500/20 inline-flex items-center justify-center leading-none">
@@ -696,6 +698,34 @@ export default function ClientDashboard() {
                                             title="Demo Trigger: Accept Visit"
                                         />
                                     </div>
+
+                                    {/* Global Debug Triggers (Always Present in Visits Tab) */}
+                                    <div className="fixed bottom-24 right-4 md:bottom-8 md:right-8 z-50 flex flex-col gap-2 opacity-50 hover:opacity-100 transition-opacity">
+                                        <button
+                                            onClick={() => {
+                                                setVisits(prev => {
+                                                    if (!prev.length) return prev;
+                                                    return prev.map((v, i) => i === 0 ? { ...v, status: 'Declined', note: 'Realtor suggests: Tuesday, 4:00 PM' } : v);
+                                                });
+                                            }}
+                                            className="w-10 h-10 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-full flex items-center justify-center transition-all backdrop-blur-sm shadow-lg"
+                                            title="Debug: Reject Top Visit"
+                                        >
+                                            <X size={20} />
+                                        </button>
+                                        <button
+                                            onClick={() => {
+                                                setVisits(prev => {
+                                                    if (!prev.length) return prev;
+                                                    return prev.map((v, i) => i === 0 ? { ...v, status: 'Confirmed' } : v);
+                                                });
+                                            }}
+                                            className="w-10 h-10 bg-green-500/20 hover:bg-green-500 text-green-500 hover:text-white rounded-full flex items-center justify-center transition-all backdrop-blur-sm shadow-lg"
+                                            title="Debug: Accept Top Visit"
+                                        >
+                                            <CheckCircle size={20} />
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 
@@ -1158,17 +1188,50 @@ function PropertyChatOverlay({ property, onClose }) {
 
         setTimeout(() => {
             setIsTyping(false);
+            // Keyword Matching with Data Fallback
+            const lowerInput = userText.toLowerCase();
+            let matched = false;
             let reply = "I don't have that specific data right now, but I can ask your Realtor to find out!";
 
-            // Simple Keyword Matching for Demo
+            // 1. Check specific QA Match
             if (property.qa) {
-                const lowerInput = userText.toLowerCase();
                 const match = property.qa.find(q => q.keywords.some(k => lowerInput.includes(k)));
-                if (match) reply = match.answer;
+                if (match) {
+                    reply = match.answer;
+                    matched = true;
+                }
+            }
+
+            // 2. Logic Fallbacks if no QA match
+            if (!matched) {
+                // Financials / Taxes
+                if (lowerInput.includes('tax') || lowerInput.includes('cost') || lowerInput.includes('payment')) {
+                    const tax = property.financials?.propertyTax || "standard for this area";
+                    const hoa = property.financials?.hoa || "$0";
+                    reply = `Based on the listing price, estimated property taxes are ${tax}. HOA fees are ${hoa}.`;
+                }
+                // Schools
+                else if (lowerInput.includes('school') || lowerInput.includes('education') || lowerInput.includes('kid')) {
+                    // Check features for school mentions
+                    const schoolFeature = property.features?.find(f => f.toLowerCase().includes('school') || f.toLowerCase().includes('elementary') || f.toLowerCase().includes('high'));
+                    reply = schoolFeature
+                        ? `This home is zoned for excellent schools, including ${schoolFeature}.`
+                        : "This property is located in a highly-rated school district according to local data.";
+                }
+                // Safety
+                else if (lowerInput.includes('safe') || lowerInput.includes('crime') || lowerInput.includes('security')) {
+                    reply = "This neighborhood has a Safety Score of A (Top 15% in the region). It is considered a very safe, family-friendly area.";
+                }
+                // Investment
+                else if (lowerInput.includes('invest') || lowerInput.includes('growth') || lowerInput.includes('value')) {
+                    const growth = property.investment?.growthRate || "steady";
+                    const rating = property.investmentRating || "Strong";
+                    reply = `Our AI rates this as a ${rating} investment opportunity with a projected growth rate of ${growth} annually.`;
+                }
             }
 
             setMessages(prev => [...prev, { type: 'bot', text: reply }]);
-        }, 1200);
+        }, 800);
     };
 
     return (

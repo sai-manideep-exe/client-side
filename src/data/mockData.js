@@ -1,27 +1,27 @@
 export const CLIENT_QUESTIONS = [
     {
         id: 'budget',
-        text: "What’s your budget range?",
+        text: "To get started, what price range are you most comfortable with?",
         options: ['$600k–$800k', '$800k–$1M', '$1M+'],
     },
     {
         id: 'beds',
-        text: "How many bedrooms do you need?",
+        text: "How many bedrooms does your lifestyle require?",
         options: ['2', '3', '4', '5+'],
     },
     {
         id: 'nearby',
-        text: "What matters most nearby?",
+        text: "When you step outside, what do you want to be close to?",
         options: ['Top Schools', 'Community Centers', 'Shopping Malls', 'High Quality Neighborhood', 'Parks', 'Quiet Area'],
     },
     {
         id: 'type',
-        text: "Preferred property type?",
+        text: "Do you have a specific home type in mind?",
         options: ['Apartment', 'Villa', 'House', 'Townhouse'],
     },
     {
         id: 'commute',
-        text: "Commute preference?",
+        text: "How does your daily commute look?",
         options: ['Short', 'Flexible', 'Remote'],
     },
 ];
