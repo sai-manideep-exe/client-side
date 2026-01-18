@@ -93,6 +93,28 @@ export const MOCK_MATCHES = [
         ],
         pros: ['12 min commute to downtown', 'Top-rated school district', 'Recently renovated kitchen'],
         cons: ['Smaller backyard', 'Street parking only'],
+        virtualTour: [
+            {
+                room: 'Living Room',
+                image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?auto=format&fit=crop&w=2000&q=80',
+                description: 'Spacious living room with hardwood floors and natural light'
+            },
+            {
+                room: 'Kitchen',
+                image: 'https://images.unsplash.com/photo-1556912172-45b7abe8b7e1?auto=format&fit=crop&w=2000&q=80',
+                description: 'Modern kitchen with quartz countertops and stainless appliances'
+            },
+            {
+                room: 'Master Bedroom',
+                image: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?auto=format&fit=crop&w=2000&q=80',
+                description: 'Master bedroom with walk-in closet and ensuite bathroom'
+            },
+            {
+                room: 'Backyard',
+                image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=2000&q=80',
+                description: 'Private backyard perfect for entertaining'
+            }
+        ],
     },
     {
         id: 2,
@@ -147,6 +169,23 @@ export const MOCK_MATCHES = [
         ],
         pros: ['Only 5 min commute', 'High appreciation potential', 'Open floor plan'],
         cons: ['Above initial budget', 'HOA fees apply'],
+        virtualTour: [
+            {
+                room: 'Living Room',
+                image: 'https://images.unsplash.com/photo-1600210491892-03d54c0aaf87?auto=format&fit=crop&w=2000&q=80',
+                description: 'Open living area with panoramic bay views'
+            },
+            {
+                room: 'Kitchen',
+                image: 'https://images.unsplash.com/photo-1556909212-d5b604d0c90d?auto=format&fit=crop&w=2000&q=80',
+                description: 'Gourmet kitchen with high-end appliances'
+            },
+            {
+                room: 'Master Suite',
+                image: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=2000&q=80',
+                description: 'Luxurious master suite with spa bathroom'
+            }
+        ],
     },
     {
         id: 3,
@@ -201,6 +240,23 @@ export const MOCK_MATCHES = [
         ],
         pros: ['Significantly under budget', 'Gym & Pool in building', 'Walkable to restaurants'],
         cons: ['No dedicated parking', 'Smaller square footage'],
+        virtualTour: [
+            {
+                room: 'Living Area',
+                image: 'https://images.unsplash.com/photo-1600607687644-c7171b42498f?auto=format&fit=crop&w=2000&q=80',
+                description: 'Industrial loft with exposed brick and high ceilings'
+            },
+            {
+                room: 'Kitchen',
+                image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?auto=format&fit=crop&w=2000&q=80',
+                description: 'Modern open kitchen with island seating'
+            },
+            {
+                room: 'Master Bedroom',
+                image: 'https://images.unsplash.com/photo-1617806118233-18e1de247200?auto=format&fit=crop&w=2000&q=80',
+                description: 'Spacious bedroom with floor-to-ceiling windows'
+            }
+        ],
     },
 ];
 

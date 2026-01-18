@@ -1,16 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { useNavigate } from 'react-router-dom';
-import { Home, Calendar, User, Heart, Send, X, TrendingUp, CheckCircle, AlertCircle, Moon, Sun, Loader2, Sparkles, ChevronRight, MessageCircle, GraduationCap, MapPin, ShoppingBag, Dumbbell, Coffee, Train, Music, Map, Clock, DollarSign } from 'lucide-react';
+import { Home, Calendar, User, Heart, Send, X, TrendingUp, CheckCircle, AlertCircle, Moon, Sun, Loader2, Sparkles, ChevronRight, MessageCircle, GraduationCap, MapPin, ShoppingBag, Dumbbell, Coffee, Train, Music, Map, Clock, DollarSign, Eye, Calculator } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { MOCK_MATCHES, MOCK_VISITS, CLIENT_QUESTIONS } from '../data/mockData';
 import { useBrand } from '../context/BrandContext';
+import VirtualTour from '../components/VirtualTour';
+import MortgageCalculator from '../components/MortgageCalculator';
 import 'leaflet/dist/leaflet.css';
 
 export default function ClientDashboard() {
     const navigate = useNavigate();
-    const { name: brandName, aiName, primaryColor } = useBrand();
+    const { name: brandName, aiName, theme } = useBrand();
     const [tab, setTab] = useState('chat');
     const [selectedProperty, setSelectedProperty] = useState(null);
     const [isDark, setIsDark] = useState(true);
@@ -30,6 +32,9 @@ export default function ClientDashboard() {
 
     // Property Chat State
     const [showPropertyChat, setShowPropertyChat] = useState(false);
+
+    // Property Modal Tab State
+    const [modalTab, setModalTab] = useState('overview'); // 'overview' | 'tour' | 'calculator'
 
     // Chat State
     const [messages, setMessages] = useState([
@@ -260,12 +265,13 @@ export default function ClientDashboard() {
                                                     }`}
                                             >
                                                 <div
-                                                    className={`relative px-5 py-3.5 text-[0.95rem] leading-relaxed shadow-sm
+                                                    className={`relative px-5 py-3.5 text-[0.95rem] leading-relaxed shadow-sm rounded-[20px]
                                 ${msg.type === 'user'
-                                                            ? 'bg-indigo-600 text-white rounded-[20px] rounded-br-[4px]'
-                                                            : 'bg-white dark:bg-[#2A2A2A] text-gray-800 dark:text-gray-200 rounded-[20px] rounded-tl-[4px] border border-gray-100 dark:border-white/5'
+                                                            ? 'text-white rounded-br-[4px]'
+                                                            : 'bg-white dark:bg-[#2A2A2A] text-gray-800 dark:text-gray-200 rounded-tl-[4px] border border-gray-100 dark:border-white/5'
                                                         }
                             `}
+                                                    style={msg.type === 'user' ? { backgroundColor: 'var(--brand-primary)' } : {}}
                                                 >
                                                     {msg.text}
                                                 </div>
@@ -313,9 +319,10 @@ export default function ClientDashboard() {
                                                         onClick={() => handleOptionToggle(opt)}
                                                         className={`group relative px-5 py-2.5 rounded-full border shadow-sm hover:shadow-md transition-all duration-200 flex items-center gap-2 text-sm font-medium
                                                         ${isSelected
-                                                                ? 'bg-indigo-600 text-white border-indigo-600'
-                                                                : 'bg-white dark:bg-[#1E1E1E] text-gray-800 dark:text-gray-200 border-gray-200 dark:border-white/10 hover:border-indigo-500 hover:text-indigo-600 dark:hover:text-white dark:hover:bg-[#252525]'
+                                                                ? 'text-white'
+                                                                : 'bg-white dark:bg-[#1E1E1E] text-gray-800 dark:text-gray-200 border-gray-200 dark:border-white/10 dark:hover:text-white dark:hover:bg-[#252525]'
                                                             }`}
+                                                        style={isSelected ? { backgroundColor: 'var(--brand-primary)', borderColor: 'var(--brand-primary)' } : {}}
                                                     >
                                                         {opt}
                                                     </button>
@@ -343,9 +350,10 @@ export default function ClientDashboard() {
                                         onClick={handleSend}
                                         disabled={!inputText.trim()}
                                         className={`w-10 h-10 rounded-full flex items-center justify-center text-white shadow-sm transition-all duration-200 shrink-0 ml-2 ${inputText.trim()
-                                            ? 'bg-indigo-500 hover:bg-indigo-600 active:scale-95'
+                                            ? 'hover:opacity-90 active:scale-95'
                                             : 'bg-gray-300 dark:bg-[#2A2A2A] text-gray-400 cursor-not-allowed'
                                             }`}
+                                        style={inputText.trim() ? { backgroundColor: 'var(--brand-primary)' } : {}}
                                     >
                                         <Send size={16} />
                                     </button>
@@ -386,7 +394,7 @@ export default function ClientDashboard() {
                                     }
 
                                     return (
-                                        <>
+                                        <React.Fragment>
                                             {/* Banner - Matches Only */}
                                             {tab === 'matches' && (
                                                 <div className="bg-gradient-to-r from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50 p-4 rounded-2xl border border-indigo-200 dark:border-indigo-500/20 mb-6 flex items-start gap-3">
@@ -439,9 +447,10 @@ export default function ClientDashboard() {
                                                             setShowCompareModal(false);
                                                         }}
                                                         className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 ${isComparing
-                                                            ? 'bg-indigo-600 text-white'
+                                                            ? 'text-white'
                                                             : 'bg-white dark:bg-white/5 text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-white/10'
                                                             }`}
+                                                        style={isComparing ? { backgroundColor: 'var(--brand-primary)' } : {}}
                                                     >
                                                         {isComparing ? <X size={14} /> : <TrendingUp size={14} />}
                                                         {isComparing ? 'Cancel' : 'Compare'}
@@ -560,7 +569,7 @@ export default function ClientDashboard() {
                                                                 )}
 
                                                                 {p.tags.includes('Realtor Pick') && (
-                                                                    <div className="absolute top-3 left-3 bg-indigo-600 text-[10px] font-bold px-2 py-1 rounded-full shadow-lg text-white">
+                                                                    <div className="absolute top-3 left-3 text-[10px] font-bold px-2 py-1 rounded-full shadow-lg text-white" style={{ backgroundColor: 'var(--brand-primary)' }}>
                                                                         Realtor Pick
                                                                     </div>
                                                                 )}
@@ -574,13 +583,13 @@ export default function ClientDashboard() {
                                                             <div className="p-4">
                                                                 <div className="flex justify-between items-start mb-2">
                                                                     <h2 className="text-lg font-bold text-gray-900 dark:text-white max-w-[70%] leading-tight">{p.address}</h2>
-                                                                    <span className="text-indigo-600 dark:text-indigo-400 font-bold">{p.price}</span>
+                                                                    <span className="font-bold" style={{ color: 'var(--brand-primary)' }}>{p.price}</span>
                                                                 </div>
                                                                 <p className="text-gray-500 text-xs mb-3">
                                                                     {p.city} • {p.beds} Beds • {p.baths} Baths
                                                                 </p>
                                                                 <div className="bg-gray-50 dark:bg-white/5 rounded-xl p-3 mb-4 flex items-center gap-2 border border-gray-100 dark:border-transparent">
-                                                                    <TrendingUp size={14} className="text-indigo-500 dark:text-indigo-400 shrink-0" />
+                                                                    <TrendingUp size={14} className="shrink-0" style={{ color: 'var(--brand-primary)' }} />
                                                                     <p className="text-xs text-gray-600 dark:text-gray-300 italic truncate">“{p.matchReason}”</p>
                                                                 </div>
                                                                 <button
@@ -601,8 +610,9 @@ export default function ClientDashboard() {
                                                                         ? 'bg-gray-100 dark:bg-white/5 text-gray-400 cursor-not-allowed'
                                                                         : visits.some(v => v.property === p.address)
                                                                             ? 'bg-green-100 dark:bg-green-500/10 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-500/20'
-                                                                            : 'bg-gray-900 dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200'
+                                                                            : 'text-white hover:opacity-90'
                                                                         }`}
+                                                                    style={!isComparing && !visits.some(v => v.property === p.address) ? { backgroundColor: 'var(--brand-primary)' } : {}}
                                                                 >
                                                                     {isComparing
                                                                         ? (selectedForCompare.includes(p.id) ? 'Selected' : 'Tap to Compare')
@@ -613,7 +623,7 @@ export default function ClientDashboard() {
                                                     ))}
                                                 </div>
                                             )}
-                                        </>
+                                        </React.Fragment>
                                     );
                                 })()
                             )}
@@ -824,213 +834,272 @@ export default function ClientDashboard() {
                                         </button>
                                     </div>
 
-                                    {/* Description */}
-                                    {selectedProperty.description && (
-                                        <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                                            {selectedProperty.description}
-                                        </p>
-                                    )}
-
-                                    {/* Features */}
-                                    {selectedProperty.features && (
-                                        <div className="space-y-2">
-                                            {selectedProperty.features.map((feature, idx) => (
-                                                <div key={idx} className="flex items-center gap-2">
-                                                    <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
-                                                    <span className="text-sm text-gray-700 dark:text-gray-200">{feature}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-
-                                    {/* Nearby Amenities */}
-                                    {selectedProperty.nearbyAmenities && (
-                                        <div className="grid grid-cols-3 gap-3">
-                                            {selectedProperty.nearbyAmenities.map((amenity, idx) => {
-                                                const Icon = getAmenityIcon(amenity.type);
-                                                return (
-                                                    <div key={idx} className="bg-gray-50 dark:bg-white/5 p-3 rounded-xl flex flex-col items-center justify-center text-center gap-1 border border-gray-100 dark:border-white/5">
-                                                        <Icon size={18} className="text-indigo-500 mb-1" />
-                                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{amenity.distance}</span>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
-
-                                    {/* AI Score Overview */}
-                                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 border border-indigo-200 dark:border-indigo-500/20 rounded-2xl p-5 flex items-center gap-5 relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-500/10 dark:bg-indigo-500/20 blur-2xl rounded-full" />
-
-                                        {/* Donut Chart Simulation */}
-                                        <div className="relative shrink-0 w-20 h-20">
-                                            <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
-                                                <path className="text-gray-200 dark:text-gray-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
-                                                <path className="text-indigo-600 dark:text-indigo-500" strokeDasharray={`${selectedProperty.aiScore}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
-                                            </svg>
-                                            <div className="absolute inset-0 flex items-center justify-center flex-col">
-                                                <span className="text-lg font-bold text-gray-900 dark:text-white">{selectedProperty.aiScore}%</span>
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <p className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-widest mb-1">AI Compatibility</p>
-                                            <p className="text-sm text-gray-600 dark:text-gray-300 leading-tight">This home matches <span className="text-gray-900 dark:text-white font-bold">98%</span> of your preferences.</p>
-                                        </div>
+                                    {/* Tab Navigation */}
+                                    <div className="flex gap-2 border-b border-gray-200 dark:border-white/10 -mx-6 px-6 mb-6">
+                                        <button
+                                            onClick={() => setModalTab('overview')}
+                                            className={`px-4 py-3 text-sm font-bold transition-all relative ${modalTab === 'overview'
+                                                ? 'text-gray-900 dark:text-white'
+                                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                                }`}
+                                        >
+                                            <Home size={16} className="inline mr-1.5" />
+                                            Overview
+                                            {modalTab === 'overview' && (
+                                                <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: 'var(--brand-primary)' }} />
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={() => setModalTab('tour')}
+                                            className={`px-4 py-3 text-sm font-bold transition-all relative ${modalTab === 'tour'
+                                                ? 'text-gray-900 dark:text-white'
+                                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                                }`}
+                                        >
+                                            <Eye size={16} className="inline mr-1.5" />
+                                            Virtual Tour
+                                            {modalTab === 'tour' && (
+                                                <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: 'var(--brand-primary)' }} />
+                                            )}
+                                        </button>
+                                        <button
+                                            onClick={() => setModalTab('calculator')}
+                                            className={`px-4 py-3 text-sm font-bold transition-all relative ${modalTab === 'calculator'
+                                                ? 'text-gray-900 dark:text-white'
+                                                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                                }`}
+                                        >
+                                            <Calculator size={16} className="inline mr-1.5" />
+                                            Calculator
+                                            {modalTab === 'calculator' && (
+                                                <div className="absolute bottom-0 left-0 right-0 h-0.5" style={{ backgroundColor: 'var(--brand-primary)' }} />
+                                            )}
+                                        </button>
                                     </div>
 
-                                    {/* Investment Rating */}
-
-                                    {/* Financial Breakdown (New) */}
-                                    {selectedProperty.financials && (
-                                        <div className="mt-6 mb-6">
-                                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                                                <DollarSign size={16} className="text-green-500" /> Estimated Monthly Cost
-                                            </h3>
-                                            <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
-                                                <div className="flex justify-between items-end mb-4">
-                                                    <div>
-                                                        <span className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{selectedProperty.financials.monthlyPayment}</span>
-                                                        <span className="text-sm text-gray-500 font-medium ml-1">/mo</span>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">Down Payment</span>
-                                                        <span className="font-bold text-gray-900 dark:text-white">{selectedProperty.financials.downPayment}</span>
-                                                    </div>
-                                                </div>
-                                                {/* Simple Bar Visualization */}
-                                                <div className="flex h-2.5 rounded-full overflow-hidden mb-3">
-                                                    <div className="w-[65%] bg-indigo-500" />
-                                                    <div className="w-[25%] bg-purple-500" />
-                                                    <div className="w-[10%] bg-pink-500" />
-                                                </div>
-                                                <div className="flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">
-                                                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Principal & Int</div>
-                                                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Tax ({selectedProperty.financials.propertyTax})</div>
-                                                    <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-pink-500" /> Ins ({selectedProperty.financials.homeInsurance})</div>
-                                                </div>
-                                            </div>
-                                        </div>
+                                    {/* Virtual Tour Tab */}
+                                    {modalTab === 'tour' && selectedProperty.virtualTour && (
+                                        <VirtualTour tour={selectedProperty.virtualTour} />
                                     )}
 
-                                    {/* Investment Scale (New) */}
-                                    {selectedProperty.investment && (
-                                        <div className="mt-6 mb-8">
-                                            <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
-                                                <TrendingUp size={16} className="text-blue-500" /> 5-Year AI Projection
-                                            </h3>
-                                            <div className="bg-gradient-to-br from-gray-900 to-black text-white rounded-2xl p-6 relative overflow-hidden shadow-lg">
-                                                <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/30 blur-[50px] rounded-full" />
-                                                <div className="relative z-10 flex justify-between items-center mb-6">
-                                                    <div>
-                                                        <span className="block text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">Predicted Value (2030)</span>
-                                                        <span className="text-2xl font-bold tracking-tight">{selectedProperty.investment.predictedValue5Years}</span>
-                                                    </div>
-                                                    <div className="text-right">
-                                                        <span className="block text-green-400 text-sm font-bold">{selectedProperty.investment.appreciation}</span>
-                                                        <span className="block text-gray-500 text-[10px] font-bold uppercase tracking-wider">Total Appreciation</span>
-                                                    </div>
-                                                </div>
-                                                {/* Fake Line Graph */}
-                                                <div className="flex items-end gap-1.5 h-16 opacity-90">
-                                                    {[30, 35, 42, 45, 48, 55, 60, 68, 75, 82, 90, 100].map((h, i) => (
-                                                        <motion.div
-                                                            key={i}
-                                                            initial={{ height: 0 }}
-                                                            whileInView={{ height: `${h}%` }}
-                                                            transition={{ duration: 0.5, delay: i * 0.05 }}
-                                                            className="flex-1 bg-gradient-to-t from-indigo-500/50 to-indigo-400 rounded-t-[2px]"
-                                                        />
+                                    {/* Calculator Tab */}
+                                    {modalTab === 'calculator' && (
+                                        <MortgageCalculator property={selectedProperty} />
+                                    )}
+
+                                    {/* Overview Tab (existing content) */}
+                                    {modalTab === 'overview' && (
+                                        <React.Fragment>
+
+                                            {/* Description */}
+                                            {selectedProperty.description && (
+                                                <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                                                    {selectedProperty.description}
+                                                </p>
+                                            )}
+
+                                            {/* Features */}
+                                            {selectedProperty.features && (
+                                                <div className="space-y-2">
+                                                    {selectedProperty.features.map((feature, idx) => (
+                                                        <div key={idx} className="flex items-center gap-2">
+                                                            <div className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+                                                            <span className="text-sm text-gray-700 dark:text-gray-200">{feature}</span>
+                                                        </div>
                                                     ))}
                                                 </div>
-                                            </div>
-                                        </div>
-                                    )}
+                                            )}
 
-                                    {/* Fallback to old rating if no deep data */}
-                                    {!selectedProperty.investment && (
-                                        <div className="flex items-center justify-between bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-100 dark:border-white/5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="p-2 bg-green-100 dark:bg-green-500/20 rounded-lg text-green-600 dark:text-green-400">
-                                                    <TrendingUp size={20} />
+                                            {/* Nearby Amenities */}
+                                            {selectedProperty.nearbyAmenities && (
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {selectedProperty.nearbyAmenities.map((amenity, idx) => {
+                                                        const Icon = getAmenityIcon(amenity.type);
+                                                        return (
+                                                            <div key={idx} className="bg-gray-50 dark:bg-white/5 p-3 rounded-xl flex flex-col items-center justify-center text-center gap-1 border border-gray-100 dark:border-white/5">
+                                                                <Icon size={18} className="text-indigo-500 mb-1" />
+                                                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{amenity.distance}</span>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
+                                            )}
+
+                                            {/* AI Score Overview */}
+                                            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/40 dark:to-purple-900/40 border border-indigo-200 dark:border-indigo-500/20 rounded-2xl p-5 flex items-center gap-5 relative overflow-hidden">
+                                                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-indigo-500/10 dark:bg-indigo-500/20 blur-2xl rounded-full" />
+
+                                                {/* Donut Chart Simulation */}
+                                                <div className="relative shrink-0 w-20 h-20">
+                                                    <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
+                                                        <path className="text-gray-200 dark:text-gray-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
+                                                        <path className="text-indigo-600 dark:text-indigo-500" strokeDasharray={`${selectedProperty.aiScore}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" strokeWidth="4" />
+                                                    </svg>
+                                                    <div className="absolute inset-0 flex items-center justify-center flex-col">
+                                                        <span className="text-lg font-bold text-gray-900 dark:text-white">{selectedProperty.aiScore}%</span>
+                                                    </div>
+                                                </div>
+
                                                 <div>
-                                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Investment Rating</p>
-                                                    <p className="text-sm font-bold text-gray-900 dark:text-white">Projected Growth: High</p>
+                                                    <p className="text-xs font-bold text-indigo-600 dark:text-indigo-300 uppercase tracking-widest mb-1">AI Compatibility</p>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-tight">This home matches <span className="text-gray-900 dark:text-white font-bold">98%</span> of your preferences.</p>
                                                 </div>
                                             </div>
-                                            <div className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter opacity-80">{selectedProperty.investmentRating}</div>
-                                        </div>
-                                    )}
 
-                                    {/* Pros & Cons */}
-                                    <div className="grid grid-cols-2 gap-4">
-                                        <div className="space-y-3">
-                                            <h4 className="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-widest flex items-center gap-2">
-                                                <CheckCircle size={12} /> The Upside
-                                            </h4>
-                                            <ul className="space-y-2">
-                                                {selectedProperty.pros.map((pro, i) => (
-                                                    <li key={i} className="text-xs text-gray-600 dark:text-gray-300 leading-normal border-l-2 border-green-500/30 pl-2">
-                                                        {pro}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                        <div className="space-y-3">
-                                            <h4 className="text-xs font-bold text-yellow-600 dark:text-yellow-500 uppercase tracking-widest flex items-center gap-2">
-                                                <AlertCircle size={12} /> The Tradeoff
-                                            </h4>
-                                            <ul className="space-y-2">
-                                                {selectedProperty.cons.map((con, i) => (
-                                                    <li key={i} className="text-xs text-gray-600 dark:text-gray-300 leading-normal border-l-2 border-yellow-500/30 pl-2">
-                                                        {con}
-                                                    </li>
-                                                ))}
-                                            </ul>
-                                        </div>
-                                    </div>
+                                            {/* Investment Rating */}
 
-                                    {/* Action Button */}
-                                    {/* Action Button */}
-                                    <button
-                                        onClick={() => setShowPropertyChat(true)}
-                                        className="w-full mb-3 py-4 rounded-xl text-sm font-bold border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 flex items-center justify-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
-                                    >
-                                        <Sparkles size={16} /> Ask AI about this home
-                                    </button>
+                                            {/* Financial Breakdown (New) */}
+                                            {selectedProperty.financials && (
+                                                <div className="mt-6 mb-6">
+                                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                                        <DollarSign size={16} className="text-green-500" /> Estimated Monthly Cost
+                                                    </h3>
+                                                    <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
+                                                        <div className="flex justify-between items-end mb-4">
+                                                            <div>
+                                                                <span className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">{selectedProperty.financials.monthlyPayment}</span>
+                                                                <span className="text-sm text-gray-500 font-medium ml-1">/mo</span>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className="block text-[10px] text-gray-400 font-bold uppercase tracking-wider">Down Payment</span>
+                                                                <span className="font-bold text-gray-900 dark:text-white">{selectedProperty.financials.downPayment}</span>
+                                                            </div>
+                                                        </div>
+                                                        {/* Simple Bar Visualization */}
+                                                        <div className="flex h-2.5 rounded-full overflow-hidden mb-3">
+                                                            <div className="w-[65%] bg-indigo-500" />
+                                                            <div className="w-[25%] bg-purple-500" />
+                                                            <div className="w-[10%] bg-pink-500" />
+                                                        </div>
+                                                        <div className="flex flex-wrap gap-4 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                                                            <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-indigo-500" /> Principal & Int</div>
+                                                            <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-purple-500" /> Tax ({selectedProperty.financials.propertyTax})</div>
+                                                            <div className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-pink-500" /> Ins ({selectedProperty.financials.homeInsurance})</div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
 
-                                    {/* Action Button */}
-                                    {(() => {
-                                        const hasVisit = visits.some(v => v.property === selectedProperty.address);
-                                        return (
+                                            {/* Investment Scale (New) */}
+                                            {selectedProperty.investment && (
+                                                <div className="mt-6 mb-8">
+                                                    <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                                                        <TrendingUp size={16} className="text-blue-500" /> 5-Year AI Projection
+                                                    </h3>
+                                                    <div className="bg-gradient-to-br from-gray-900 to-black text-white rounded-2xl p-6 relative overflow-hidden shadow-lg">
+                                                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/30 blur-[50px] rounded-full" />
+                                                        <div className="relative z-10 flex justify-between items-center mb-6">
+                                                            <div>
+                                                                <span className="block text-gray-400 text-[10px] font-bold uppercase tracking-wider mb-1">Predicted Value (2030)</span>
+                                                                <span className="text-2xl font-bold tracking-tight">{selectedProperty.investment.predictedValue5Years}</span>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className="block text-green-400 text-sm font-bold">{selectedProperty.investment.appreciation}</span>
+                                                                <span className="block text-gray-500 text-[10px] font-bold uppercase tracking-wider">Total Appreciation</span>
+                                                            </div>
+                                                        </div>
+                                                        {/* Fake Line Graph */}
+                                                        <div className="flex items-end gap-1.5 h-16 opacity-90">
+                                                            {[30, 35, 42, 45, 48, 55, 60, 68, 75, 82, 90, 100].map((h, i) => (
+                                                                <motion.div
+                                                                    key={i}
+                                                                    initial={{ height: 0 }}
+                                                                    whileInView={{ height: `${h}%` }}
+                                                                    transition={{ duration: 0.5, delay: i * 0.05 }}
+                                                                    className="flex-1 bg-gradient-to-t from-indigo-500/50 to-indigo-400 rounded-t-[2px]"
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                            {/* Fallback to old rating if no deep data */}
+                                            {!selectedProperty.investment && (
+                                                <div className="flex items-center justify-between bg-gray-50 dark:bg-white/5 rounded-xl p-4 border border-gray-100 dark:border-white/5">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="p-2 bg-green-100 dark:bg-green-500/20 rounded-lg text-green-600 dark:text-green-400">
+                                                            <TrendingUp size={20} />
+                                                        </div>
+                                                        <div>
+                                                            <p className="text-xs text-gray-500 dark:text-gray-400 font-medium">Investment Rating</p>
+                                                            <p className="text-sm font-bold text-gray-900 dark:text-white">Projected Growth: High</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter opacity-80">{selectedProperty.investmentRating}</div>
+                                                </div>
+                                            )}
+
+                                            {/* Pros & Cons */}
+                                            <div className="grid grid-cols-2 gap-4">
+                                                <div className="space-y-3">
+                                                    <h4 className="text-xs font-bold text-green-600 dark:text-green-400 uppercase tracking-widest flex items-center gap-2">
+                                                        <CheckCircle size={12} /> The Upside
+                                                    </h4>
+                                                    <ul className="space-y-2">
+                                                        {selectedProperty.pros.map((pro, i) => (
+                                                            <li key={i} className="text-xs text-gray-600 dark:text-gray-300 leading-normal border-l-2 border-green-500/30 pl-2">
+                                                                {pro}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                                <div className="space-y-3">
+                                                    <h4 className="text-xs font-bold text-yellow-600 dark:text-yellow-500 uppercase tracking-widest flex items-center gap-2">
+                                                        <AlertCircle size={12} /> The Tradeoff
+                                                    </h4>
+                                                    <ul className="space-y-2">
+                                                        {selectedProperty.cons.map((con, i) => (
+                                                            <li key={i} className="text-xs text-gray-600 dark:text-gray-300 leading-normal border-l-2 border-yellow-500/30 pl-2">
+                                                                {con}
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            </div>
+
+                                            {/* Action Button */}
+                                            {/* Action Button */}
                                             <button
-                                                onClick={(e) => {
-                                                    if (hasVisit && visitStatus === 'idle') {
-                                                        closeModal();
-                                                        setTab('visits');
-                                                    } else {
-                                                        handleRequestVisit();
-                                                    }
-                                                }}
-                                                disabled={visitStatus === 'loading'}
-                                                className={`w-full py-4 rounded-xl text-lg font-bold shadow-lg transition-all flex items-center justify-center gap-2
-                                                    ${(hasVisit || visitStatus === 'success') && visitStatus !== 'loading'
-                                                        ? 'bg-green-500 hover:bg-green-600 text-white'
-                                                        : 'bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95'
-                                                    }
-                                                `}
+                                                onClick={() => setShowPropertyChat(true)}
+                                                className="w-full mb-3 py-4 rounded-xl text-sm font-bold border border-indigo-200 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 flex items-center justify-center gap-2 hover:bg-indigo-100 dark:hover:bg-indigo-500/20 transition-colors"
                                             >
-                                                {visitStatus === 'loading'
-                                                    ? <><Loader2 className="animate-spin" /> Booking...</>
-                                                    : (hasVisit || visitStatus === 'success')
-                                                        ? <><CheckCircle /> Request Sent!</>
-                                                        : 'Schedule Private Tour'
-                                                }
+                                                <Sparkles size={16} /> Ask AI about this home
                                             </button>
-                                        );
-                                    })()}
 
+                                            {/* Action Button */}
+                                            {(() => {
+                                                const hasVisit = visits.some(v => v.property === selectedProperty.address);
+                                                return (
+                                                    <button
+                                                        onClick={(e) => {
+                                                            if (hasVisit && visitStatus === 'idle') {
+                                                                closeModal();
+                                                                setTab('visits');
+                                                            } else {
+                                                                handleRequestVisit();
+                                                            }
+                                                        }}
+                                                        disabled={visitStatus === 'loading'}
+                                                        className={`w-full py-4 rounded-xl text-lg font-bold shadow-lg transition-all flex items-center justify-center gap-2
+                                                    ${(hasVisit || visitStatus === 'success') && visitStatus !== 'loading'
+                                                                ? 'bg-green-500 hover:bg-green-600 text-white'
+                                                                : 'bg-indigo-600 hover:bg-indigo-500 text-white active:scale-95'
+                                                            }
+                                                `}
+                                                    >
+                                                        {visitStatus === 'loading'
+                                                            ? <><Loader2 className="animate-spin" /> Booking...</>
+                                                            : (hasVisit || visitStatus === 'success')
+                                                                ? <><CheckCircle /> Request Sent!</>
+                                                                : 'Schedule Private Tour'
+                                                        }
+                                                    </button>
+                                                );
+                                            })()}
+
+                                        </React.Fragment>
+                                    )}
                                 </div>
                             </motion.div>
                         </motion.div>
@@ -1316,24 +1385,28 @@ function PropertyChatOverlay({ property, onClose }) {
     );
 }
 
-const NavSidebarItem = ({ icon: Icon, label, active, onClick }) => (
-    <button
-        onClick={onClick}
-        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${active
-            ? 'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'
-            : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
-            }`}
-    >
-        <Icon size={20} className={`transition-colors ${active ? 'fill-current' : ''}`} />
-        <span className="font-bold text-sm">{label}</span>
-        {active && (
-            <motion.div
-                layoutId="sidebar-active"
-                className="absolute right-0 w-1 h-8 bg-indigo-500 rounded-l-full"
-            />
-        )}
-    </button>
-);
+function NavSidebarItem({ icon: Icon, label, active, onClick }) {
+    return (
+        <button
+            onClick={onClick}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group relative ${active
+                ? 'bg-gradient-to-r from-brand-primary/10 to-transparent dark:from-brand-primary/10 text-gray-900 dark:text-white'
+                : 'text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
+                }`}
+            style={active ? { color: 'var(--brand-primary)' } : {}}
+        >
+            <Icon size={20} className={`transition-colors ${active ? '' : ''}`} />
+            <span className="font-bold text-sm">{label}</span>
+            {active && (
+                <motion.div
+                    layoutId="sidebar-active"
+                    className="absolute right-0 w-1 h-8 rounded-l-full"
+                    style={{ backgroundColor: 'var(--brand-primary)' }}
+                />
+            )}
+        </button>
+    );
+}
 
 function getAmenityIcon(type) {
     switch (type) {
