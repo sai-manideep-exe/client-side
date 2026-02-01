@@ -102,8 +102,8 @@ export default function MortgageCalculator({ property }) {
                                 key={term}
                                 onClick={() => setLoanTerm(term)}
                                 className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${loanTerm === term
-                                        ? 'bg-indigo-600 text-white'
-                                        : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
+                                    ? 'bg-indigo-600 text-white'
+                                    : 'bg-gray-100 dark:bg-white/5 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-white/10'
                                     }`}
                             >
                                 {term}yr
@@ -144,10 +144,58 @@ export default function MortgageCalculator({ property }) {
                 </div>
             </div>
 
+            {/* Loan Summary - NEW */}
+            <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-2xl p-5 border border-purple-200 dark:border-purple-500/20">
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <TrendingUp size={16} /> Loan Summary
+                </h4>
+                <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Home Price</span>
+                        <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(basePrice)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600 dark:text-gray-400">Down Payment ({downPaymentPercent}%)</span>
+                        <span className="font-bold text-gray-900 dark:text-white">-{formatCurrency(downPayment)}</span>
+                    </div>
+                    <div className="border-t border-purple-200 dark:border-purple-500/20 pt-3">
+                        <div className="flex justify-between items-center">
+                            <span className="text-sm font-bold text-gray-900 dark:text-white">Total Loan Amount</span>
+                            <span className="text-lg font-bold text-purple-600 dark:text-purple-400">{formatCurrency(loanAmount)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Long-term Financial Details - NEW */}
+            <div className="bg-gray-50 dark:bg-white/5 rounded-2xl p-5 border border-gray-100 dark:border-white/5">
+                <h4 className="text-sm font-bold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <HomeIcon size={16} /> Long-term Costs
+                </h4>
+                <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Total Interest Paid</span>
+                        <span className="font-bold text-gray-900 dark:text-white">{formatCurrency((monthlyPI * numPayments) - loanAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Total Principal Paid</span>
+                        <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(loanAmount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Total Payments ({loanTerm} years)</span>
+                        <span className="font-bold text-gray-900 dark:text-white">{formatCurrency(totalMonthly * numPayments)}</span>
+                    </div>
+                    <div className="border-t border-gray-200 dark:border-white/10 pt-2 mt-2 flex justify-between">
+                        <span className="text-sm font-bold text-gray-900 dark:text-white">Total Cost of Home</span>
+                        <span className="text-lg font-bold text-indigo-600 dark:text-indigo-400">{formatCurrency(downPayment + (totalMonthly * numPayments))}</span>
+                    </div>
+                </div>
+            </div>
+
             {/* Affordability Indicator */}
             <div className={`rounded-2xl p-5 border-2 ${affordability.color === 'green' ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-500/30' :
-                    affordability.color === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-500/30' :
-                        'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-500/30'
+                affordability.color === 'yellow' ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-500/30' :
+                    'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-500/30'
                 }`}>
                 <div className="flex items-center gap-3 mb-2">
                     <span className="text-2xl">{affordability.emoji}</span>

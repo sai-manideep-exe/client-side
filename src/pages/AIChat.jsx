@@ -210,7 +210,7 @@ export default function AIChat() {
                             type="text"
                             value={selectedOptions.join(', ')}
                             readOnly
-                            placeholder="Select options above..."
+                            placeholder="..."
                             className="w-full h-12 bg-white dark:bg-[#1E1E1E] border border-gray-200 dark:border-white/10 rounded-full px-5 text-gray-900 dark:text-gray-100 shadow-inner focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all font-medium placeholder-gray-400"
                         />
                         <button
